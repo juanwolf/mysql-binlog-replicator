@@ -5,3 +5,6 @@ jdk:
 
 script:
   - mvn clean test
+
+after_success:
+  - mvn clean -DrepoToken=$repoToken cobertura:cobertura coveralls:report

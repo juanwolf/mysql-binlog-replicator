@@ -26,6 +26,8 @@
         <reflections.version>0.9.9-RC1</reflections.version>
         <assertj-core.version>3.1.0</assertj-core.version>
         <maven-jar-plugin.version>2.6</maven-jar-plugin.version>
+        <coveralls-maven-plugin.version>3.1.0</coveralls-maven-plugin.version>
+        <cobertura-maven-plugin.version>2.6</cobertura-maven-plugin.version>
     </properties>
 
     <dependencies>
@@ -102,6 +104,23 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>cobertura-maven-plugin</artifactId>
+                <version>${cobertura-maven-plugin.version}</version>
+                <configuration>
+                    <check>
+                        <totalLineRate>90</totalLineRate>
+                    </check>
+                    <format>xml</format>
+                    <maxmem>256m</maxmem>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.eluder.coveralls</groupId>
+                <artifactId>coveralls-maven-plugin</artifactId>
+                <version>${coveralls-maven-plugin.version}</version>
             </plugin>
         </plugins>
     </build>
