@@ -18,7 +18,6 @@ import java.util.Map;
 public class MySQLEventListener implements BinaryLogClient.EventListener {
 
     //All columnNames for all tables
-    @Getter
     @Setter
     private Map<String, Object[]> columnMap;
     // All the column type for the table
