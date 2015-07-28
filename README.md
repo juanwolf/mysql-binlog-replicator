@@ -96,8 +96,12 @@ As you can see we keep the spring configuration for the elasticsearch repository
 
 Add to your pojos annotations needed by the ElasticSearch Repository, example for the account class above :
 
-- @Document(indexName = "account")
-- @Mapping(mappingPath = "account")
+    @Document(indexName = "account")
+    @Mapping(mappingPath = "account")
+    @MysqlMapping(table = "account", repository="accountRepository")
+    public class Account {
+        ...
+    }
 
 ### Create your main ###
 
