@@ -79,6 +79,7 @@ public class MysqlBinLogService {
     }
 
     void getColumnName() {
+        log.info("Retrieving columns informations from the database.");
         final List<String> tableExpected = domainClassAnalyzer.getTableExpected();
         columnMap = new HashMap<>();
         for (String tableName : tableExpected) {
@@ -90,6 +91,7 @@ public class MysqlBinLogService {
             for (Map<String, Object> column : columnsMap) {
                 columnsList.add((String) column.get("COLUMN_NAME"));
             }
+            log.debug("Columns found for {} : {}", tableName, Arrays.toString(columnsList.toArray()));
             columnMap.put(tableName, columnsList.toArray());
         }
 
