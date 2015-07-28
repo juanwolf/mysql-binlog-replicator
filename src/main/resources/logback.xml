@@ -1,0 +1,8 @@
+<configuration>
+
+    <jmxConfigurator/>
+    <logger name="fr.juanwolf" level="DEBUG"/>
+    <property name="LOG_PATH" value="/var/log/mysql-binlog-replicator/"/>
+    <property name="LOG_FILE" value="${LOG_PATH}/mysql-binlog-replicator.log"/>
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+</configuration>
