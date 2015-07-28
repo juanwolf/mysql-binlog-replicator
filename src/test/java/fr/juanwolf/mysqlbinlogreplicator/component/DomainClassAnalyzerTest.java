@@ -14,13 +14,19 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
+import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DomainClassAnalyzerTest {
+
+    public static final DateFormat BINLOG_DATE_FORMATTER = new SimpleDateFormat("EEE MMM dd hh:mm:ss z yyyy", Locale.UK);
 
     @Autowired
     @InjectMocks
@@ -105,16 +111,17 @@ public class DomainClassAnalyzerTest {
     public void instantiateField_should_set_creationDate_with_date_specified() throws NoSuchFieldException, ParseException {
         // Given
         String date = "Wed Jul 22 13:00:00 CEST 2015";
+        Date dateExpected = BINLOG_DATE_FORMATTER.parse(date);
         Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
         // When
         domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("creationDate"), date, ColumnType.DATETIME.getCode());
 
         // Then
-        assertThat(date).isEqualTo(account.getCreationDate().toString());
+        assertThat(account.getCreationDate()).isEqualTo(dateExpected);
     }
 
     @Test
-    public void instantiateField_should_not_set_creationDate_if_date_is_not_parsable() throws NoSuchFieldException, ParseException {
+    public void instantiateField_should_not_set_creationDate_if_date_is_not_parsable() throws NoSuchFieldException {
         // Given
         String date = "My nice date";
         Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
