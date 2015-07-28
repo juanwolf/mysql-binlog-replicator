@@ -1,4 +1,4 @@
-# MySQL BinLog Replicator  [![Build Status](https://travis-ci.org/juanwolf/mysql-binlog-replicator.svg?branch=master)](https://travis-ci.org/juanwolf/mysql-binlog-replicator) [![Coverage Status](https://coveralls.io/repos/juanwolf/mysql-binlog-replicator/badge.svg?branch=master&service=github)](https://coveralls.io/github/juanwolf/mysql-binlog-replicator?branch=master)# 
+# MySQL BinLog Replicator  [![Build Status](https://travis-ci.org/juanwolf/mysql-binlog-replicator.svg?branch=master)](https://travis-ci.org/juanwolf/mysql-binlog-replicator) [![Coverage Status](https://coveralls.io/repos/juanwolf/mysql-binlog-replicator/badge.svg?branch=master&service=github)](https://coveralls.io/github/juanwolf/mysql-binlog-replicator?branch=master)
 
 This library will give you the ability to create a real time feeding from a mysql database to an ElasticSearch etc...
 (all repository available in spring which extend the CRUDRepository interface in fact)
