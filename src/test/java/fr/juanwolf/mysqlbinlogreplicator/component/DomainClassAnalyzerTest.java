@@ -23,7 +23,6 @@ import com.github.shyiko.mysql.binlog.event.deserialization.ColumnType;
 import fr.juanwolf.mysqlbinlogreplicator.annotations.MysqlMapping;
 import fr.juanwolf.mysqlbinlogreplicator.dao.AccountRepository;
 import fr.juanwolf.mysqlbinlogreplicator.domain.Account;
-import javafx.scene.effect.Reflection;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,7 +32,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
-import javax.management.ReflectionException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
