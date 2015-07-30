@@ -28,6 +28,7 @@ import org.springframework.data.repository.CrudRepository;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -100,25 +101,25 @@ public class MySQLEventListener implements BinaryLogClient.EventListener {
         return domainClassAnalyzer.getTableExpected().contains(tableName);
     }
 
-    Object generateDomainObjectForUpdateEvent(Event event, String tableName) throws ReflectiveOperationException {
+    Object generateDomainObjectForUpdateEvent(Event event, String tableName) throws ReflectiveOperationException, ParseException {
         UpdateRowsEventData data = event.getData();
         Serializable[] afterValues = data.getRows().get(0).getValue();
         return getObjectFromRows(afterValues, tableName);
     }
 
-    Object generateDomainObjectForWriteEvent(Event event, String tableName) throws ReflectiveOperationException {
+    Object generateDomainObjectForWriteEvent(Event event, String tableName) throws ReflectiveOperationException, ParseException {
         WriteRowsEventData data = event.getData();
         Serializable[] rows = data.getRows().get(0);
         return getObjectFromRows(rows, tableName);
     }
 
-    Object generateDomainObjectForDeleteEvent(Event event, String tableName) throws ReflectiveOperationException {
+    Object generateDomainObjectForDeleteEvent(Event event, String tableName) throws ReflectiveOperationException, ParseException {
         DeleteRowsEventData data = event.getData();
         Serializable[] rows = data.getRows().get(0);
         return getObjectFromRows(rows, tableName);
     }
 
-    Object getObjectFromRows(Serializable[] rows, String tableName) throws ReflectiveOperationException {
+    Object getObjectFromRows(Serializable[] rows, String tableName) throws ReflectiveOperationException, ParseException {
         Object[] columns = columnMap.get(tableName);
         Object object = domainClassAnalyzer.generateInstanceFromName(tableName);
         String debugLogObject = "";

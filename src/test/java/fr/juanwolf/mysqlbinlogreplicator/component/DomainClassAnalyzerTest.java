@@ -155,10 +155,12 @@ public class DomainClassAnalyzerTest {
         String date = "My nice date";
         Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
         // When
-        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("creationDate"), date, ColumnType.DATETIME.getCode());
-
-        // Then
-        assertThat(account.getCreationDate()).isNull();
+        try {
+            domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("creationDate"), date, ColumnType.DATETIME.getCode());
+            fail("ParseException expected.");
+        } catch (ParseException e) {
+            assertThat(e).hasMessage("Unparseable date: \"My nice date\"");
+        }
     }
 
     @Test
@@ -198,7 +200,7 @@ public class DomainClassAnalyzerTest {
     }
 
     @Test
-    public void instantiateField_should_set_id_for_with_the_specific_value() throws ReflectiveOperationException {
+    public void instantiateField_should_set_id_for_with_the_specific_value() throws ReflectiveOperationException, ParseException {
         // Given
         String id = "15";
         int idExpected = Integer.parseInt(id);

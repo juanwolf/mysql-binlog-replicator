@@ -35,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.CrudRepository;
 
 import java.io.Serializable;
+import java.text.ParseException;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -122,7 +123,7 @@ public class MySQLEventListenerTest {
     }
 
     @Test
-    public void getObjectFromRows_should_return_an_object_with_field_equals_to_null_for_empty_array() throws ReflectiveOperationException {
+    public void getObjectFromRows_should_return_an_object_with_field_equals_to_null_for_empty_array() throws ReflectiveOperationException, ParseException {
         // given
         Serializable[] rows = {};
         when(mySQLEventListener.getDomainClassAnalyzer().generateInstanceFromName("account")).thenReturn(new Account());
@@ -133,7 +134,7 @@ public class MySQLEventListenerTest {
     }
 
     @Test
-    public void getObjectFromRows_should_return_an_object_with_fields_set_to_specificValue() throws ReflectiveOperationException {
+    public void getObjectFromRows_should_return_an_object_with_fields_set_to_specificValue() throws ReflectiveOperationException, ParseException {
         // given
         String email = "this.is.my.mail@devel.com";
         byte[] types = { (byte) ColumnType.VARCHAR.getCode()};
@@ -148,7 +149,7 @@ public class MySQLEventListenerTest {
     }
 
     @Test
-    public void getObjectFromRows_should_return_an_empty_object_if_a_no_such_field_exception_occurred() throws ReflectiveOperationException {
+    public void getObjectFromRows_should_return_an_empty_object_if_a_no_such_field_exception_occurred() throws ReflectiveOperationException, ParseException {
         // given
         String email = "this.is.my.mail@devel.com";
         byte[] types = { (byte) ColumnType.VARCHAR.getCode()};
@@ -163,7 +164,7 @@ public class MySQLEventListenerTest {
     }
 
     @Test
-    public void getObjectFromRows_should_not_instanciate_a_field_with_a_null_value_in_rows() throws ReflectiveOperationException {
+    public void getObjectFromRows_should_not_instanciate_a_field_with_a_null_value_in_rows() throws ReflectiveOperationException, ParseException {
         // given
         String email = null;
         byte[] types = { (byte) ColumnType.VARCHAR.getCode()};
@@ -205,7 +206,7 @@ public class MySQLEventListenerTest {
     }
 
     @Test
-    public void generateDomainObjectForUpdateEvent_should_return_the_specify_object_for_the_specific_rows() throws ReflectiveOperationException {
+    public void generateDomainObjectForUpdateEvent_should_return_the_specify_object_for_the_specific_rows() throws ReflectiveOperationException, ParseException {
         // Given
         Map<String, byte[]> columnsType = new HashMap<>();
         byte[] types = { (byte) ColumnType.VARCHAR.getCode()};
@@ -234,7 +235,7 @@ public class MySQLEventListenerTest {
     }
 
     @Test
-    public void generateDomainObjectForDeleteEvent_should_return_the_specify_object_for_the_specific_rows() throws ReflectiveOperationException {
+    public void generateDomainObjectForDeleteEvent_should_return_the_specify_object_for_the_specific_rows() throws ReflectiveOperationException, ParseException {
         // Given
         Map<String, byte[]> columnsType = new HashMap<>();
         byte[] types = { (byte) ColumnType.VARCHAR.getCode()};
@@ -261,7 +262,7 @@ public class MySQLEventListenerTest {
     }
 
     @Test
-    public void generateDomainObjectForWriteEvent_should_return_the_specify_object_for_the_specific_rows() throws ReflectiveOperationException {
+    public void generateDomainObjectForWriteEvent_should_return_the_specify_object_for_the_specific_rows() throws ReflectiveOperationException, ParseException {
         // Given
         byte[] types = { (byte) ColumnType.VARCHAR.getCode()};
         Object[] columns = {"mail"};

@@ -93,27 +93,19 @@ public class DomainClassAnalyzer {
         return null;
     }
 
-    public void instantiateField(Object object, Field field, Object value, int columnType) {
+    public void instantiateField(Object object, Field field, Object value, int columnType) throws ParseException, IllegalAccessException {
         field.setAccessible(true);
-        try {
-            if (columnType == ColumnType.DATETIME.getCode() && field.getType() == Date.class) {
-                try {
-                    Date date = BINLOG_DATE_FORMATTER.parse((String) value);
-                    field.set(object, date);
-                } catch (ParseException e) {
-                    log.error("Could not parse the date {} : {}", value, e.getMessage());
-                }
-            } else if (columnType == ColumnType.LONG.getCode() && field.getType() == long.class) {
-                field.set(object, Long.parseLong((String) value));
-            } else if (columnType == ColumnType.LONG.getCode() && isInteger(field)) {
-                field.set(object, Integer.parseInt((String) value));
-            } else if (columnType == ColumnType.FLOAT.getCode() && field.getType() == float.class) {
-                field.set(object, Float.parseFloat((String) value));
-            } else {
-                field.set(object, value);
-            }
-        } catch (IllegalAccessException e) {
-            log.error(e.getMessage());
+        if (columnType == ColumnType.DATETIME.getCode() && field.getType() == Date.class) {
+            Date date = BINLOG_DATE_FORMATTER.parse((String) value);
+            field.set(object, date);
+        } else if (columnType == ColumnType.LONG.getCode() && field.getType() == long.class) {
+            field.set(object, Long.parseLong((String) value));
+        } else if (columnType == ColumnType.LONG.getCode() && isInteger(field)) {
+            field.set(object, Integer.parseInt((String) value));
+        } else if (columnType == ColumnType.FLOAT.getCode() && field.getType() == float.class) {
+            field.set(object, Float.parseFloat((String) value));
+        } else {
+            field.set(object, value);
         }
     }
 
