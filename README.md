@@ -19,6 +19,11 @@ To activate replication on the master, add this configuration to your mysql conf
     binlog-format    = row # important to detect write and update event.
 
 
+WARNING :
+ 
+ As says in [mysql-binlog-connector-java](https://github.com/shyiko/mysql-binlog-connector-java#tapping-into-mysql-replication-stream), 
+ Make sure that the user you're using has the REPLICATION SLAVE and REPLICATION CLIENT privileges.
+
 ### Setup the mysql-binlog-replicator ###
 
 Create a mysql-binlog-replicator.properties with the mysql configuration :

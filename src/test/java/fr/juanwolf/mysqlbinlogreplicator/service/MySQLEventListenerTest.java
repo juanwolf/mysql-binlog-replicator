@@ -1,3 +1,22 @@
+/*
+    Copyright (C) 2015  Jean-Loup Adde
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+
+
 package fr.juanwolf.mysqlbinlogreplicator.service;
 
 import com.github.shyiko.mysql.binlog.event.*;
@@ -122,11 +141,26 @@ public class MySQLEventListenerTest {
     }
 
     @Test
-    public void getObjectFromRows_should_return_an_empty_object_if_a_no_such_field_exception_occures() {
+    public void getObjectFromRows_should_return_an_empty_object_if_a_no_such_field_exception_occurred() {
         // given
         String email = "this.is.my.mail@devel.com";
         byte[] types = { (byte) ColumnType.VARCHAR.getCode()};
         Object[] columns = {"no field"};
+        setUpMySqlEventListener(columns, types);
+        Serializable[] rows = {email};
+        when(domainClassAnalyzer.generateInstanceFromName("account")).thenReturn(new Account());
+        // when
+        Account object = (Account) mySQLEventListener.getObjectFromRows(rows, "account");
+        // then
+        assertThat(object).isEqualToComparingFieldByField(new Account());
+    }
+
+    @Test
+    public void getObjectFromRows_should_not_instanciate_a_field_with_a_null_value_in_rows() {
+        // given
+        String email = null;
+        byte[] types = { (byte) ColumnType.VARCHAR.getCode()};
+        Object[] columns = {"mail"};
         setUpMySqlEventListener(columns, types);
         Serializable[] rows = {email};
         when(domainClassAnalyzer.generateInstanceFromName("account")).thenReturn(new Account());
