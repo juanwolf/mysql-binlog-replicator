@@ -36,7 +36,9 @@ import java.util.Date;
 @MysqlMapping(table = "account", repository="accountRepository")
 public class Account {
     @Id
-    String id;
+    @Setter
+    @Getter
+    int id;
 
     @Getter
     @Field(type = FieldType.Long, index = FieldIndex.analyzed)

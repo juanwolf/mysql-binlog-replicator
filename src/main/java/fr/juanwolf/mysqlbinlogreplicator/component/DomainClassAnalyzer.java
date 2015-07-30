@@ -105,11 +105,19 @@ public class DomainClassAnalyzer {
                 field.set(object, Long.parseLong((String) value));
             } else if (columnType == ColumnType.FLOAT.getCode() && field.getType() == float.class) {
                 field.set(object, Float.parseFloat((String) value));
+            } else if (columnType == ColumnType.INT24.getCode() && isInteger(field)) {
+                field.set(object, Integer.parseInt((String) value));
             } else {
                 field.set(object, value);
             }
         } catch (IllegalAccessException e) {
             log.error(e.getMessage());
         }
+    }
+
+    // TOOLS
+
+    static boolean isInteger(Field field) {
+        return field.getType() == Integer.class || field.getType() == int.class;
     }
 }

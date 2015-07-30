@@ -24,6 +24,6 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchCrudReposi
 /**
  * Created by juanwolf on 17/07/15.
  */
-public interface AccountRepository extends ElasticsearchCrudRepository<Account, String> {
+public interface AccountRepository extends ElasticsearchCrudRepository<Account, Integer> {
 
 }

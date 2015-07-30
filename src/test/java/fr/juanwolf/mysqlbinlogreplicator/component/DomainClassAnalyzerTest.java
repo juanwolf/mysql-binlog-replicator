@@ -175,5 +175,29 @@ public class DomainClassAnalyzerTest {
         assertThat(valueExpected).isEqualTo(account.getCartAmount());
     }
 
+    @Test
+    public void isInteger_should_return_true_for_integer_Type() throws NoSuchFieldException {
+        // Given
+        Account account = new Account();
+        account.setId(0);
+        // When
+        boolean isInteger = DomainClassAnalyzer.isInteger(account.getClass().getDeclaredField("id"));
+        // Then
+        assertThat(isInteger).isTrue();
+    }
+
+    @Test
+    public void instantiateField_should_set_id_for_with_the_specific_value() throws NoSuchFieldException {
+        // Given
+        String id = "15";
+        int idExpected = Integer.parseInt(id);
+        Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
+        // When
+        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("id"), id, ColumnType.INT24.getCode());
+
+        // Then
+        assertThat(account.getId()).isEqualTo(idExpected);
+    }
+
 
 }
