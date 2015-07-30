@@ -43,6 +43,7 @@ import java.util.*;
 public class DomainClassAnalyzer {
 
     @Getter
+    @Setter
     private Map<String, Class> domainNameMap = new HashMap<>();
 
     @Getter
@@ -76,10 +77,11 @@ public class DomainClassAnalyzer {
         }
     }
 
-    public Object generateInstanceFromName(String name) {
+    public Object generateInstanceFromName(String name) throws ReflectiveOperationException {
         Class classAsked = domainNameMap.get(name);
         if (classAsked == null) {
             log.error("Class with name {} not found.", name);
+            throw new ReflectiveOperationException();
         }
         try {
             Constructor classConstructor = classAsked.getConstructor();
@@ -103,10 +105,10 @@ public class DomainClassAnalyzer {
                 }
             } else if (columnType == ColumnType.LONG.getCode() && field.getType() == long.class) {
                 field.set(object, Long.parseLong((String) value));
+            } else if (columnType == ColumnType.LONG.getCode() && isInteger(field)) {
+                field.set(object, Integer.parseInt((String) value));
             } else if (columnType == ColumnType.FLOAT.getCode() && field.getType() == float.class) {
                 field.set(object, Float.parseFloat((String) value));
-            } else if (columnType == ColumnType.INT24.getCode() && isInteger(field)) {
-                field.set(object, Integer.parseInt((String) value));
             } else {
                 field.set(object, value);
             }

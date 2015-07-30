@@ -55,9 +55,16 @@ public class MySQLEventListener implements BinaryLogClient.EventListener {
         this.columnsTypes =  new HashMap<>();
     }
 
-
     @Override
     public void onEvent(Event event) {
+        try {
+            this.actionOnEvent(event);
+        } catch (Exception e) {
+            log.error("An exception occurred during OnEvent.", e);
+        }
+    }
+
+    public void actionOnEvent(Event event) throws Exception {
         CrudRepository currentRepository = domainClassAnalyzer.getRepositoryMap().get(tableName);
         Class currentClass = domainClassAnalyzer.getDomainNameMap().get(tableName);
         if (EventType.isDelete(event.getHeader().getEventType())) {
@@ -93,42 +100,43 @@ public class MySQLEventListener implements BinaryLogClient.EventListener {
         return domainClassAnalyzer.getTableExpected().contains(tableName);
     }
 
-    Object generateDomainObjectForUpdateEvent(Event event, String tableName) {
+    Object generateDomainObjectForUpdateEvent(Event event, String tableName) throws ReflectiveOperationException {
         UpdateRowsEventData data = event.getData();
         Serializable[] afterValues = data.getRows().get(0).getValue();
         return getObjectFromRows(afterValues, tableName);
     }
 
-    Object generateDomainObjectForWriteEvent(Event event, String tableName) {
+    Object generateDomainObjectForWriteEvent(Event event, String tableName) throws ReflectiveOperationException {
         WriteRowsEventData data = event.getData();
         Serializable[] rows = data.getRows().get(0);
         return getObjectFromRows(rows, tableName);
     }
 
-    Object generateDomainObjectForDeleteEvent(Event event, String tableName) {
+    Object generateDomainObjectForDeleteEvent(Event event, String tableName) throws ReflectiveOperationException {
         DeleteRowsEventData data = event.getData();
         Serializable[] rows = data.getRows().get(0);
         return getObjectFromRows(rows, tableName);
     }
 
-    Object getObjectFromRows(Serializable[] rows, String tableName) {
+    Object getObjectFromRows(Serializable[] rows, String tableName) throws ReflectiveOperationException {
         Object[] columns = columnMap.get(tableName);
         Object object = domainClassAnalyzer.generateInstanceFromName(tableName);
-        String debugLogObject = "{";
+        String debugLogObject = "";
         byte[] columnsType = columnsTypes.get(tableName);
         for (int i = 0; i < rows.length; i++) {
             if (rows[i] != null) {
                 try {
                     Field field = object.getClass().getDeclaredField(columns[i].toString());
                     domainClassAnalyzer.instantiateField(object, field, rows[i].toString(), columnsType[i]);
-                    debugLogObject += columns[i] + "=" + rows[i].toString() + ", ";
+                    if (log.isDebugEnabled()) {
+                        debugLogObject += columns[i] + "=" + rows[i].toString() + ", ";
+                    }
                 } catch (NoSuchFieldException exception) {
-                    log.debug("No field found for {}", columns[i].toString());
+                    log.warn("No field found for {}", columns[i].toString(), exception);
                 }
             }
         }
-        debugLogObject += "}";
-        log.debug("Object generated : " + debugLogObject);
+        log.debug("Object generated :  {{}}", debugLogObject);
         return object;
     }
 

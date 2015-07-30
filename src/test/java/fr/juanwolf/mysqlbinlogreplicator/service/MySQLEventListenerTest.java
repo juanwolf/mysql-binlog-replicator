@@ -31,6 +31,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.CrudRepository;
 
 import java.io.Serializable;
@@ -44,6 +45,8 @@ import static org.mockito.Mockito.when;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MySQLEventListenerTest {
+
+    Map<String, Class> domainNameMap;
 
     @Spy
     DomainClassAnalyzer domainClassAnalyzer;
@@ -69,6 +72,9 @@ public class MySQLEventListenerTest {
 
     @Before
     public void setUp() {
+        domainNameMap = new HashMap<>();
+        domainNameMap.put("account", Account.class);
+        domainClassAnalyzer.setDomainNameMap(domainNameMap);
         when(repositoryMap.get("newTable")).thenReturn(crudRepository);
         when(domainClassAnalyzer.getRepositoryMap()).thenReturn(repositoryMap);
         when(tableMapEventHeader.getEventType()).thenReturn(EventType.TABLE_MAP);
@@ -76,6 +82,7 @@ public class MySQLEventListenerTest {
         tableMapEventData.setTable(tableName);
         this.tableMapEvent = new Event(tableMapEventHeader, tableMapEventData);
         mySQLEventListener = new MySQLEventListener(new HashMap<>(), domainClassAnalyzer);
+
     }
 
     @Test
@@ -115,7 +122,7 @@ public class MySQLEventListenerTest {
     }
 
     @Test
-    public void getObjectFromRows_should_return_an_object_with_field_equals_to_null_for_empty_array() {
+    public void getObjectFromRows_should_return_an_object_with_field_equals_to_null_for_empty_array() throws ReflectiveOperationException {
         // given
         Serializable[] rows = {};
         when(mySQLEventListener.getDomainClassAnalyzer().generateInstanceFromName("account")).thenReturn(new Account());
@@ -126,7 +133,7 @@ public class MySQLEventListenerTest {
     }
 
     @Test
-    public void getObjectFromRows_should_return_an_object_with_fields_set_to_specificValue() {
+    public void getObjectFromRows_should_return_an_object_with_fields_set_to_specificValue() throws ReflectiveOperationException {
         // given
         String email = "this.is.my.mail@devel.com";
         byte[] types = { (byte) ColumnType.VARCHAR.getCode()};
@@ -141,7 +148,7 @@ public class MySQLEventListenerTest {
     }
 
     @Test
-    public void getObjectFromRows_should_return_an_empty_object_if_a_no_such_field_exception_occurred() {
+    public void getObjectFromRows_should_return_an_empty_object_if_a_no_such_field_exception_occurred() throws ReflectiveOperationException {
         // given
         String email = "this.is.my.mail@devel.com";
         byte[] types = { (byte) ColumnType.VARCHAR.getCode()};
@@ -156,7 +163,7 @@ public class MySQLEventListenerTest {
     }
 
     @Test
-    public void getObjectFromRows_should_not_instanciate_a_field_with_a_null_value_in_rows() {
+    public void getObjectFromRows_should_not_instanciate_a_field_with_a_null_value_in_rows() throws ReflectiveOperationException {
         // given
         String email = null;
         byte[] types = { (byte) ColumnType.VARCHAR.getCode()};
@@ -198,7 +205,7 @@ public class MySQLEventListenerTest {
     }
 
     @Test
-    public void generateDomainObjectForUpdateEvent_should_return_the_specify_object_for_the_specific_rows() throws NoSuchFieldException, IllegalAccessException {
+    public void generateDomainObjectForUpdateEvent_should_return_the_specify_object_for_the_specific_rows() throws ReflectiveOperationException {
         // Given
         Map<String, byte[]> columnsType = new HashMap<>();
         byte[] types = { (byte) ColumnType.VARCHAR.getCode()};
@@ -227,7 +234,7 @@ public class MySQLEventListenerTest {
     }
 
     @Test
-    public void generateDomainObjectForDeleteEvent_should_return_the_specify_object_for_the_specific_rows() {
+    public void generateDomainObjectForDeleteEvent_should_return_the_specify_object_for_the_specific_rows() throws ReflectiveOperationException {
         // Given
         Map<String, byte[]> columnsType = new HashMap<>();
         byte[] types = { (byte) ColumnType.VARCHAR.getCode()};
@@ -254,7 +261,7 @@ public class MySQLEventListenerTest {
     }
 
     @Test
-    public void generateDomainObjectForWriteEvent_should_return_the_specify_object_for_the_specific_rows() {
+    public void generateDomainObjectForWriteEvent_should_return_the_specify_object_for_the_specific_rows() throws ReflectiveOperationException {
         // Given
         byte[] types = { (byte) ColumnType.VARCHAR.getCode()};
         Object[] columns = {"mail"};
@@ -276,7 +283,7 @@ public class MySQLEventListenerTest {
     }
 
     @Test
-    public void onEvent_should_remove_the_object_from_the_event_received_if_the_table_is_concerned() {
+    public void onEvent_should_remove_the_object_from_the_event_received_if_the_table_is_concerned() throws ReflectiveOperationException {
         // given
         when(eventHeader.getEventType()).thenReturn(EventType.DELETE_ROWS);
         StubRepository stubRepository = new StubRepository();
@@ -300,7 +307,7 @@ public class MySQLEventListenerTest {
     }
 
     @Test
-    public void onEvent_should_insert_the_object_from_the_event_received_if_the_table_is_concerned() {
+    public void onEvent_should_insert_the_object_from_the_event_received_if_the_table_is_concerned() throws ReflectiveOperationException {
         // given
         when(eventHeader.getEventType()).thenReturn(EventType.WRITE_ROWS);
         StubRepository stubRepository = new StubRepository();
@@ -323,7 +330,7 @@ public class MySQLEventListenerTest {
     }
 
     @Test
-    public void onEvent_should_update_the_object_from_the_event_received_if_the_table_is_concerned() {
+    public void onEvent_should_update_the_object_from_the_event_received_if_the_table_is_concerned() throws ReflectiveOperationException {
         // given
         String emailExpected = "test@test.com";
         when(eventHeader.getEventType()).thenReturn(EventType.UPDATE_ROWS);
@@ -359,7 +366,7 @@ public class MySQLEventListenerTest {
         mySQLEventListener.setColumnsTypes(columnsType);
     }
 
-    public void setUpDomainClassAnalyzer(CrudRepository crudRepository, Account account) {
+    public void setUpDomainClassAnalyzer(CrudRepository crudRepository, Account account) throws ReflectiveOperationException {
         Map<String, Class> domainMap = new HashMap<>();
         List<String> tablesExpected = new ArrayList<>();
         tablesExpected.add("account");

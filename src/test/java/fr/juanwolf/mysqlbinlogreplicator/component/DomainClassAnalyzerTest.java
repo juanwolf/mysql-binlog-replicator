@@ -23,6 +23,7 @@ import com.github.shyiko.mysql.binlog.event.deserialization.ColumnType;
 import fr.juanwolf.mysqlbinlogreplicator.annotations.MysqlMapping;
 import fr.juanwolf.mysqlbinlogreplicator.dao.AccountRepository;
 import fr.juanwolf.mysqlbinlogreplicator.domain.Account;
+import javafx.scene.effect.Reflection;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,6 +33,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
+import javax.management.ReflectionException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -39,6 +41,7 @@ import java.util.Date;
 import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.StrictAssertions.fail;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -87,7 +90,7 @@ public class DomainClassAnalyzerTest {
     }
 
     @Test
-    public void generateInstance_from_name_should_return_a_serviceRequest() {
+    public void generateInstance_from_name_should_return_a_serviceRequest() throws ReflectiveOperationException {
         // Given
         // When
         Object account = domainClassAnalyzer.generateInstanceFromName("account");
@@ -99,22 +102,30 @@ public class DomainClassAnalyzerTest {
     public void generateInstance_from_name_should_return_null_if_no_class_has_been_found() {
         // Given
         // When
-        Object serviceRequest = domainClassAnalyzer.generateInstanceFromName("none");
+        try {
+            Object serviceRequest = domainClassAnalyzer.generateInstanceFromName("none");
+            fail("ReflectiveOperationException expected.");
+        } catch (ReflectiveOperationException e) {
+            assertThat(true).isTrue();
+        }
         // Then
-        assertThat(serviceRequest).isNull();
     }
 
     @Test
-    public void generateInstanceFromName_should_return_null_if_no_empty_constructor_in_class_has_been_found() {
+    public void generateInstanceFromName_should_return_null_if_no_empty_constructor_in_class_has_been_found()  {
         // Given
         // When
-        Object serviceRequest = domainClassAnalyzer.generateInstanceFromName("none");
-        // Then
-        assertThat(serviceRequest).isNull();
+        try {
+            Object serviceRequest = domainClassAnalyzer.generateInstanceFromName("none");
+            fail("Expected ReflectionEXception");
+        } catch (ReflectiveOperationException e) {
+            // Then
+            assertThat(true).isTrue();
+        }
     }
 
     @Test
-    public void instantiateField_should_set_mail_with_string_specified() throws NoSuchFieldException, ParseException {
+    public void instantiateField_should_set_mail_with_string_specified() throws ReflectiveOperationException, ParseException {
         // Given
         String mail = "awesome_identifier";
         Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
@@ -126,7 +137,7 @@ public class DomainClassAnalyzerTest {
     }
 
     @Test
-    public void instantiateField_should_set_creationDate_with_date_specified() throws NoSuchFieldException, ParseException {
+    public void instantiateField_should_set_creationDate_with_date_specified() throws ReflectiveOperationException, ParseException {
         // Given
         String date = "Wed Jul 22 13:00:00 CEST 2015";
         Date dateExpected = BINLOG_DATE_FORMATTER.parse(date);
@@ -139,7 +150,7 @@ public class DomainClassAnalyzerTest {
     }
 
     @Test
-    public void instantiateField_should_not_set_creationDate_if_date_is_not_parsable() throws NoSuchFieldException {
+    public void instantiateField_should_not_set_creationDate_if_date_is_not_parsable() throws ReflectiveOperationException {
         // Given
         String date = "My nice date";
         Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
@@ -151,7 +162,7 @@ public class DomainClassAnalyzerTest {
     }
 
     @Test
-    public void instantiateField_should_set_identifier_with_long_specified() throws NoSuchFieldException, ParseException {
+    public void instantiateField_should_set_identifier_with_long_specified() throws ReflectiveOperationException, ParseException {
         // Given
         String longValue = "4";
         long valueExpected = 4;
@@ -164,7 +175,7 @@ public class DomainClassAnalyzerTest {
     }
 
     @Test
-    public void instantiateField_should_set_cart_amount_with_float_specified() throws NoSuchFieldException, ParseException {
+    public void instantiateField_should_set_cart_amount_with_float_specified() throws ReflectiveOperationException, ParseException {
         // Given
         String floatValue = "4.5";
         float valueExpected = 4.5f;
@@ -187,13 +198,13 @@ public class DomainClassAnalyzerTest {
     }
 
     @Test
-    public void instantiateField_should_set_id_for_with_the_specific_value() throws NoSuchFieldException {
+    public void instantiateField_should_set_id_for_with_the_specific_value() throws ReflectiveOperationException {
         // Given
         String id = "15";
         int idExpected = Integer.parseInt(id);
         Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
         // When
-        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("id"), id, ColumnType.INT24.getCode());
+        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("id"), id, ColumnType.LONG.getCode());
 
         // Then
         assertThat(account.getId()).isEqualTo(idExpected);
