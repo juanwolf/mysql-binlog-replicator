@@ -4,7 +4,7 @@
 
     <groupId>fr.juanwolf</groupId>
     <artifactId>mysql-binlog-replicator</artifactId>
-    <version>1.0.4</version>
+    <version>1.0.5-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Mysql BinLog Replicator</name>
@@ -28,7 +28,7 @@
         <url>https://github.com/juanwolf/mysql-binlog-replicator</url>
         <connection>scm:git:git@github.com:juanwolf/mysql-binlog-replicator.git</connection>
         <developerConnection>scm:git:git@github.com:juanwolf/mysql-binlog-replicator.git</developerConnection>
-      <tag>mysql-binlog-replicator-1.0.4</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <properties>
