@@ -4,7 +4,7 @@
 
     <groupId>fr.juanwolf</groupId>
     <artifactId>mysql-binlog-replicator</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Mysql BinLog Replicator</name>
@@ -95,6 +95,10 @@
     </dependencies>
 
     <distributionManagement>
+        <snapshotRepository>
+            <id>nexus-releases</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
         <repository>
             <id>nexus-releases</id>
             <name>Nexus Release Repository</name>
