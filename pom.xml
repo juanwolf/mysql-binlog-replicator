@@ -10,7 +10,14 @@
 
     <name>Mysql BinLog Replicator</name>
     <description>Create the ORM between events received from the mysql-binlog-java library and spring repositories.</description>
-
+    <developers>
+        <developer>
+            <id>juanwolf</id>
+            <name>Jean-Loup ADDE</name>
+            <email>jean-loup.adde@juanwolf.fr</email>
+            <url>http://juanwolf.fr</url>
+        </developer>
+    </developers>
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -79,8 +86,15 @@
             <version>${assertj-core.version}</version>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
+
+    <distributionManagement>
+        <repository>
+            <id>nexus-releases</id>
+            <name>Nexus Release Repository</name>
+            <url>http://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 
     <build>
         <sourceDirectory>src/main/java</sourceDirectory>
