@@ -13,8 +13,7 @@ script:
 
 after_success:
   - mvn clean -DrepoToken=$repoToken cobertura:cobertura coveralls:report
-  - mvn release:clean release:prepare
-  - mvn -B -s ./.travis.settings.xml release:perform -Darguments=-Dgpg.passphrase=${env.GPG_PASSPHRASE}
+  - ./deploy.sh
 
 env:
   global:
