@@ -5,6 +5,14 @@ This library will give you the ability to create a real time feeding from a mysq
 
 ## Install ##
 
+### Maven ###
+
+    <dependency>
+        <groupId>fr.juanwolf</groupId>
+        <artifactId>mysql-binlog-replicator</artifactId>
+        <version>1.0.5</version>
+    </dependency>
+
 ### Setup the MYSQL server ###
 
 First, configure your server to activate the replication.
@@ -118,4 +126,10 @@ Add to your pojos annotations needed by the ElasticSearch Repository, example fo
 
 Thanks to [shykio](https://github.com/shyiko) and his [mysql-binlog-connector-java](https://github.com/shyiko/mysql-binlog-connector-java), the mysql-binlog-replicator will detect every update of the binlog file from your mysqll server and then replicate it to your CRUD repository.
  
- 
+### Example ###
+
+You can find an example of how to use it here : [mysql-binlog-replicator-example](http://github.com/juanwolf/mysql-binlog-replicator-example)
+
+## Enhancement ##
+
+The project does not support nested documents and does not apply indexes (could be a feature in next releases).
