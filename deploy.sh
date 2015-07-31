@@ -3,8 +3,8 @@ VERSION=$( grep -oPm1 "(?<=<version>)[^-SNAPSHOT<]+" pom.xml | head -1)
 
 TAG="mysql-binlog-replicator-$VERSION"
 
-git config --global user.name "Jean-Loup Adde [Sent by Travis]"
-git config --global user.email "jean-loup.adde@juanwolf.fr"
+git config --global user.name "$GIT_NAME"
+git config --global user.email "$GIT_EMAIL"
 
-mvn  -B release:clean -Dtag=$TAG -DreleaseVersion=$VERSION release:prepare
-mvn release:perform
+mvn -s ./.travis.settings.xml  --batch-mode -Dtag=$TAG -DreleaseVersion=$VERSION release:prepare release:clean
+mvn -s ./.travis.settings.xml release:perform
