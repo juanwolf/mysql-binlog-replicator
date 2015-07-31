@@ -10,7 +10,7 @@ This library will give you the ability to create a real time feeding from a mysq
     <dependency>
         <groupId>fr.juanwolf</groupId>
         <artifactId>mysql-binlog-replicator</artifactId>
-        <version>1.0.5</version>
+        <version>1.0.6</version>
     </dependency>
 
 ### Setup the MYSQL server ###
