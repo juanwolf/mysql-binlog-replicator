@@ -1,8 +1,3 @@
-# Variable available :
-# GPG_PASSPHRASE
-# CI_DEPLOY_USERNAME
-# CI_DEPLOY_PASSWORD
-
 language: java
 
 jdk:
@@ -17,7 +12,9 @@ script:
   - mvn clean test
 
 after_success:
-  - mvn clean -DrepoToken=$repoToken cobertura:cobertura coveralls:report deploy -Darguments=-Dgpg.passphrase=${env.GPG_PASSPHRASE}
+  - mvn clean -DrepoToken=$repoToken cobertura:cobertura coveralls:report
+  - mvn release:clean release:prepare
+  - mvn -B -s ./.travis.settings.xml release:perform -Darguments=-Dgpg.passphrase=${env.GPG_PASSPHRASE}
 
 env:
   global:

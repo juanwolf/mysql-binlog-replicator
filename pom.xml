@@ -112,11 +112,10 @@
 
     <profiles>
         <profile>
-            <id>release-sign-artifacts</id>
+            <id>release</id>
             <activation>
                 <property>
-                    <name>performRelease</name>
-                    <value>false</value>
+                    <name>gpg.passphrase</name>
                 </property>
             </activation>
             <build>
