@@ -1,15 +1,27 @@
 language: java
 jdk:
-- oraclejdk8
+  - oraclejdk8
+
 branches:
   only:
   - master
   - 1.1.x
 script:
-- mvn clean test
+  - mvn clean test
 after_success:
-- mvn clean -DrepoToken=$repoToken cobertura:cobertura coveralls:report
-- "./deploy.sh"
+  - mvn clean -DrepoToken=$repoToken cobertura:cobertura coveralls:report
+  - git config credential.helper "store --file=.git/credentials"
+  - echo "https://${GH_TOKEN}:@github.com" > .git/credentials
+  - VERSION=$( grep -oPm1 "(?<=<version>)[^-SNAPSHOT<]+" pom.xml | head -1)
+  - TAG="mysql-binlog-replicator-$VERSION"
+  - git config --global user.name "$GIT_NAME"
+  - git config --global user.email "$GIT_EMAIL"
+  - git checkout master
+  - git remote rm origin
+  - git remote add origin "https://$GH_TOKEN@github.com/juanwolf/mysql-binlog-replicator.git"
+  - mvn -s ./.travis.settings.xml  --batch-mode -Dtag=$TAG -DreleaseVersion=$VERSION -Dgpg.passphrase=$GPG_PASSPHRASE release:prepare release:clean
+  - mvn -s ./.travis.settings.xml release:perform -Dgpg.passphrase=$GPG_PASSPHRASE
+
 env:
   global:
   - secure: GkGCYFr7Zf6sKdIySqBLm5HpvsZO9934S4TlArdlfqO+kiMqNCKOcB2qN01daiFFxhPocxaMkCi6Wgxry0N8oaT1x1RS2e7lt69H7fZSYUEQoxDPLEKE+jQKPumq6XR/z9m5NltkidRiOtnq4u8pl23y5+p8OAMk9KMp2MAsRYcnfLQ/nbEsFyF/3XH41CfErCIQ+mgVAVT3ZTOswsfzU1Cc0V9XQ0XuTk3uI8FailJKBSLy3L0pv7LWSSBLl7S4jlJDgO3B6628OXzGgxqaKqngLU7RaezB8lLxp9zdR1ydSEs83vLpJK9S0V5X5h6gVlyjYNrmuijG42lervQaH3+hCrdhZlIMzEo5oJUcqD6ZHupVu9pZQgd03Ce/IPU9bAKWF2YroiFyR8+ghcnmXY5R6Ci7Gr1qQKOtOsThoZXO0I5LRQfDHlC30L/7PSWLIVvhb1pyRWHkYOnQ4WPrW9IGjkFI89ihnoCdxO3Z212oYPi9vcfU5go7nwWumjcE7q3n1D1K0xdWNPtttIHRvPawj3KKM/nIxfEMjuvF/1A74OMfDQWWSpYamrBgUgMWCK7VJd07YOWidC3dhWE5xGhrrdaqBzJveCRxHt2Cyv16P+g/ulu+7qZdOg3refCFtY/Ixq67mT7kw7rutU65fGhvuy8IPGnRiInXxyTF4bc=
