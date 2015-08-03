@@ -18,10 +18,6 @@ after_success:
   - git checkout master
   - mvn -s ./.travis.settings.xml  --batch-mode -Dtag=$TAG -DreleaseVersion=$VERSION -Dgh.token=$GH_TOKEN -Dgpg.passphrase=$GPG_PASSPHRASE release:clean release:prepare
   - mvn -s ./.travis.settings.xml release:perform -Dgpg.passphrase=$GPG_PASSPHRASE -Dgh.token=$GH_TOKEN
-  - git remote set-url origin https://$GH_TOKEN@github.com/juanwolf/mysql-binlog-replicator.git
-  - git checkout -b develop
-  - git commit pom.xml -m "feat(mvn): Changing project version [Travis]"
-  - git push origin develop
 
 env:
   global:
