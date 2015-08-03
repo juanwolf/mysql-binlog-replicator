@@ -26,8 +26,8 @@
 
     <scm>
         <url>https://github.com/juanwolf/mysql-binlog-replicator</url>
-        <connection>scm:git:git@github.com:juanwolf/mysql-binlog-replicator.git</connection>
-        <developerConnection>scm:git:git@github.com:juanwolf/mysql-binlog-replicator.git</developerConnection>
+        <connection>scm:git:https://${gh.token}@github.com/juanwolf/mysql-binlog-replicator.git</connection>
+        <developerConnection>scm:git:https://${gh.token}@github.com/juanwolf/mysql-binlog-replicator.git</developerConnection>
       <tag>HEAD</tag>
   </scm>
 
