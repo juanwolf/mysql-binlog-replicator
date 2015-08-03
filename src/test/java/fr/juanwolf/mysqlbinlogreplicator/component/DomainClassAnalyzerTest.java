@@ -210,5 +210,44 @@ public class DomainClassAnalyzerTest {
         assertThat(account.getId()).isEqualTo(idExpected);
     }
 
+    @Test
+    public void instantiateField_should_set_boolean_to_true_if_value_is_1_for_byte_type() throws ReflectiveOperationException, ParseException {
+        // Given
+        byte isAdmin = 1;
+        boolean valueExpected = true;
+        Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
+        // When
+        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("isAdmin"), isAdmin, ColumnType.BIT.getCode());
+
+        // Then
+        assertThat(account.isAdmin()).isEqualTo(valueExpected);
+    }
+
+    @Test
+    public void instantiateField_should_set_boolean_to_true_if_value_is_1_for_tiny_type() throws ReflectiveOperationException, ParseException {
+        // Given
+        byte isAdmin = 1;
+        boolean valueExpected = true;
+        Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
+        // When
+        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("isAdmin"), isAdmin, ColumnType.TINY.getCode());
+
+        // Then
+        assertThat(account.isAdmin()).isEqualTo(valueExpected);
+    }
+
+    @Test
+    public void instantiateField_should_set_boolean_to_false_if_value_is_0_for_tiny_type() throws ReflectiveOperationException, ParseException {
+        // Given
+        byte isAdmin = 0;
+        boolean valueExpected = false;
+        Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
+        // When
+        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("isAdmin"), isAdmin, ColumnType.TINY.getCode());
+
+        // Then
+        assertThat(account.isAdmin()).isEqualTo(valueExpected);
+    }
+
 
 }

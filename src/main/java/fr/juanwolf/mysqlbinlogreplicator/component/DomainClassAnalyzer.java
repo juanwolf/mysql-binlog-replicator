@@ -98,6 +98,10 @@ public class DomainClassAnalyzer {
         if (columnType == ColumnType.DATETIME.getCode() && field.getType() == Date.class) {
             Date date = BINLOG_DATE_FORMATTER.parse((String) value);
             field.set(object, date);
+        } else if ((columnType == ColumnType.BIT.getCode() || columnType == ColumnType.TINY.getCode())
+            && field.getType() == boolean.class) {
+            boolean booleanField = ((Byte) value) != 0;
+            field.set(object, booleanField);
         } else if (columnType == ColumnType.LONG.getCode() && field.getType() == long.class) {
             field.set(object, Long.parseLong((String) value));
         } else if (columnType == ColumnType.LONG.getCode() && isInteger(field)) {

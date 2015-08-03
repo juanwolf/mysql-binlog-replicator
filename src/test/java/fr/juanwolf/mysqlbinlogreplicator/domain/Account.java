@@ -56,4 +56,9 @@ public class Account {
     @Getter
     @Field(index = FieldIndex.analyzed, type = FieldType.Float)
     float cartAmount;
+
+    @Getter
+    @Setter
+    @Field(index = FieldIndex.analyzed, type = FieldType.Boolean)
+    boolean isAdmin;
 }
