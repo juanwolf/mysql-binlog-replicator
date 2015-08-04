@@ -61,4 +61,8 @@ public class Account {
     @Setter
     @Field(index = FieldIndex.analyzed, type = FieldType.Boolean)
     boolean isAdmin;
+
+    @Getter
+    @Field(index = FieldIndex.analyzed, type = FieldType.String)
+    String dateString;
 }
