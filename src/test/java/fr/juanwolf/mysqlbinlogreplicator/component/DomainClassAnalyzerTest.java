@@ -38,6 +38,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.StrictAssertions.fail;
@@ -121,11 +122,11 @@ public class DomainClassAnalyzerTest {
     }
 
     @Test
-    public void generateInstance_from_name_should_return_null_if_no_class_has_been_found() {
+    public void generateInstance_from_name_should_return_an_exception_if_no_class_has_been_found() {
         // Given
         // When
         try {
-            Object serviceRequest = domainClassAnalyzer.generateInstanceFromName("none");
+            Object none = domainClassAnalyzer.generateInstanceFromName("none");
             fail("ReflectiveOperationException expected.");
         } catch (ReflectiveOperationException e) {
             assertThat(true).isTrue();
@@ -134,16 +135,17 @@ public class DomainClassAnalyzerTest {
     }
 
     @Test
-    public void generateInstanceFromName_should_return_null_if_no_empty_constructor_in_class_has_been_found()  {
+    public void generateInstanceFromName_should_return_null_if_no_constructor_exist() throws ReflectiveOperationException {
         // Given
+        class NoConstructorClass {}
+        Map<String, Class> domainMap = domainClassAnalyzer.getDomainNameMap();
+        domainMap.put("noConstructorClass", NoConstructorClass.class);
+        domainClassAnalyzer.setDomainNameMap(domainMap);
         // When
-        try {
-            Object serviceRequest = domainClassAnalyzer.generateInstanceFromName("none");
-            fail("Expected ReflectionEXception");
-        } catch (ReflectiveOperationException e) {
-            // Then
-            assertThat(true).isTrue();
-        }
+        NoConstructorClass noConstructorObject = (NoConstructorClass) domainClassAnalyzer.generateInstanceFromName("noConstructorClass");
+        // Then
+        assertThat(noConstructorObject).isNull();
+
     }
 
     @Test

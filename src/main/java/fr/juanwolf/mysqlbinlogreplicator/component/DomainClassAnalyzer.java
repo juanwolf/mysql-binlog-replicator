@@ -97,7 +97,8 @@ public class DomainClassAnalyzer {
             Constructor classConstructor = classAsked.getConstructor();
             return classConstructor.newInstance();
         } catch (Exception e) {
-            log.error("No empty constructor found or the constructor is private for class {}", name);
+            log.error("Impossible to instantiate an instance of {}: "
+                    + "no empty constructor found or the constructor is private for class {}", name, name);
         }
         // Should never happen.
         return null;
