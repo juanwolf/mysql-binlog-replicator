@@ -27,6 +27,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.env.Environment;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Component;
 
@@ -59,7 +60,13 @@ public class DomainClassAnalyzer {
     @Getter
     private List<String> tableExpected;
 
+    @Autowired
+    private Environment environment;
+
     public static final DateFormat BINLOG_DATE_FORMATTER = new SimpleDateFormat("EEE MMM dd hh:mm:ss z yyyy", Locale.UK);
+
+    @Getter
+    public DateFormat binlogOutputDateFormatter;
 
     @PostConstruct
     public void postConstruct() throws BeansException {
@@ -74,6 +81,9 @@ public class DomainClassAnalyzer {
             domainNameMap.put(mysqlMapping.table(), classDomain);
             CrudRepository crudRepository = (CrudRepository) applicationContext.getBean(mysqlMapping.repository());
             repositoryMap.put(mysqlMapping.table(), crudRepository);
+        }
+        if (environment.getProperty("date.output") != null) {
+            binlogOutputDateFormatter = new SimpleDateFormat(environment.getProperty("date.output"));
         }
     }
 
@@ -98,6 +108,15 @@ public class DomainClassAnalyzer {
         if (columnType == ColumnType.DATETIME.getCode() && field.getType() == Date.class) {
             Date date = BINLOG_DATE_FORMATTER.parse((String) value);
             field.set(object, date);
+        } else if (columnType == ColumnType.DATETIME.getCode() && field.getType() == String.class) {
+            Date date = BINLOG_DATE_FORMATTER.parse((String) value);
+            if (binlogOutputDateFormatter != null) {
+                field.set(object, binlogOutputDateFormatter.format(date));
+            } else {
+                log.warn("No date.output DateFormat found in your property file. If you want anything else than" +
+                        "the timestamp as output of your date, set this property with a java DateFormat.");
+                field.set(object, date.toString());
+            }
         } else if ((columnType == ColumnType.BIT.getCode() || columnType == ColumnType.TINY.getCode())
             && field.getType() == boolean.class) {
             boolean booleanField = ((Byte) value) != 0;

@@ -31,6 +31,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.env.Environment;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -59,9 +60,13 @@ public class DomainClassAnalyzerTest {
     @Mock
     private AccountRepository accountRepository;
 
+    @Mock
+    private Environment environment;
+
     @Before
     public void setUp() {
         when(applicationContext.getBean("accountRepository")).thenReturn(accountRepository);
+        when(environment.getProperty("date.output")).thenReturn(null);
         domainClassAnalyzer.setScanMapping(scanMapping);
         domainClassAnalyzer.postConstruct();
     }
@@ -85,6 +90,25 @@ public class DomainClassAnalyzerTest {
         //domainClassAnalyzer.postConstruct();
         // then
         assertThat(domainClassAnalyzer.getTableExpected()).contains(valueExpected);
+    }
+
+    @Test
+    public void postContruct_should_set_the_dateOutputFormatter_to_null_if_no_dateoutput_given() {
+        // given
+        // when
+        // then
+        assertThat(domainClassAnalyzer.getBinlogOutputDateFormatter()).isNull();
+    }
+
+    @Test
+    public void postContruct_should_set_the_dateOutputFormatter_if_a_dateoutput_is_given() {
+        // given
+        String dateOutput = "YYYY-MM-dd";
+        when(environment.getProperty("date.output")).thenReturn(dateOutput);
+        // when
+        domainClassAnalyzer.postConstruct();
+        // then
+        assertThat(domainClassAnalyzer.getBinlogOutputDateFormatter()).isNotNull();
     }
 
     @Test
@@ -247,6 +271,40 @@ public class DomainClassAnalyzerTest {
 
         // Then
         assertThat(account.isAdmin()).isEqualTo(valueExpected);
+    }
+
+    @Test
+    public void instantiateField_should_set_the_string_with_the_specified_output_of_the_date() throws ReflectiveOperationException, ParseException {
+        // Given
+        String outputFormat = "YYYY-MM-dd";
+        when(environment.getProperty("date.output")).thenReturn(outputFormat);
+        // We need to reload the domainClassAnalyzer
+        String date = "Wed Jul 22 13:00:00 CEST 2015";
+        String dateStringExpected = "2015-07-22";
+        domainClassAnalyzer.postConstruct();
+        // When
+        Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
+        // When
+        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("dateString"), date, ColumnType.DATETIME.getCode());
+
+        // Then
+        assertThat(account.getDateString()).isEqualTo(dateStringExpected);
+    }
+
+    @Test
+    public void instantiateField_should_set_the_string_with_the_same_output_as_received_if_no_dateouput_()
+            throws ReflectiveOperationException, ParseException {
+        // Given
+        // We need to reload the domainClassAnalyzer
+        String date = "Wed Jul 22 13:00:00 CEST 2015";
+        domainClassAnalyzer.postConstruct();
+        // When
+        Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
+        // When
+        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("dateString"), date, ColumnType.DATETIME.getCode());
+
+        // Then
+        assertThat(account.getDateString()).isEqualTo(date);
     }
 
 
