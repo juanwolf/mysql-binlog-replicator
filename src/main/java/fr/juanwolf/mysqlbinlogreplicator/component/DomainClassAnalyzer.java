@@ -63,7 +63,9 @@ public class DomainClassAnalyzer {
     @Autowired
     private Environment environment;
 
-    public static final DateFormat BINLOG_DATE_FORMATTER = new SimpleDateFormat("EEE MMM dd hh:mm:ss z yyyy", Locale.UK);
+    public static final DateFormat BINLOG_DATETIME_FORMATTER = new SimpleDateFormat("EEE MMM dd hh:mm:ss z yyyy", Locale.UK);
+
+    public static final DateFormat BINLOG_DATE_FORMATTER = new SimpleDateFormat("yyyy-MM-dd", Locale.UK);
 
     @Getter
     public DateFormat binlogOutputDateFormatter;
@@ -106,11 +108,14 @@ public class DomainClassAnalyzer {
 
     public void instantiateField(Object object, Field field, Object value, int columnType) throws ParseException, IllegalAccessException {
         field.setAccessible(true);
-        if (columnType == ColumnType.DATETIME.getCode() && field.getType() == Date.class) {
+        if (columnType == ColumnType.DATETIME.getCode()  && field.getType() == Date.class) {
+            Date date = BINLOG_DATETIME_FORMATTER.parse((String) value);
+            field.set(object, date);
+        } else if (columnType == ColumnType.DATE.getCode()  && field.getType() == Date.class) {
             Date date = BINLOG_DATE_FORMATTER.parse((String) value);
             field.set(object, date);
         } else if (columnType == ColumnType.DATETIME.getCode() && field.getType() == String.class) {
-            Date date = BINLOG_DATE_FORMATTER.parse((String) value);
+            Date date = BINLOG_DATETIME_FORMATTER.parse((String) value);
             if (binlogOutputDateFormatter != null) {
                 field.set(object, binlogOutputDateFormatter.format(date));
             } else {

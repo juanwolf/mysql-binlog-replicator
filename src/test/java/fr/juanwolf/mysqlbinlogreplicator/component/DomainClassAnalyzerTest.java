@@ -47,7 +47,8 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class DomainClassAnalyzerTest {
 
-    public static final DateFormat BINLOG_DATE_FORMATTER = new SimpleDateFormat("EEE MMM dd hh:mm:ss z yyyy", Locale.UK);
+    public static final DateFormat BINLOG_DATETIME_FORMATTER = new SimpleDateFormat("EEE MMM dd hh:mm:ss z yyyy", Locale.UK);
+    public static final DateFormat BINLOG_DATE_FORMATTER = new SimpleDateFormat("yyyy-MM-dd", Locale.UK);
 
     @Autowired
     @InjectMocks
@@ -164,7 +165,7 @@ public class DomainClassAnalyzerTest {
     public void instantiateField_should_set_creationDate_with_date_specified() throws ReflectiveOperationException, ParseException {
         // Given
         String date = "Wed Jul 22 13:00:00 CEST 2015";
-        Date dateExpected = BINLOG_DATE_FORMATTER.parse(date);
+        Date dateExpected = BINLOG_DATETIME_FORMATTER.parse(date);
         Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
         // When
         domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("creationDate"), date, ColumnType.DATETIME.getCode());
@@ -307,6 +308,21 @@ public class DomainClassAnalyzerTest {
 
         // Then
         assertThat(account.getDateString()).isEqualTo(date);
+    }
+
+    @Test
+    public void instantiateField_should_set_the_date_with_the_specific_date_for_date_type() throws ReflectiveOperationException, ParseException {
+        // Given
+        // We need to reload the domainClassAnalyzer
+        String date = "2015-07-09";
+        Date dateExpected = BINLOG_DATE_FORMATTER.parse(date);
+        domainClassAnalyzer.postConstruct();
+        Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
+        // When
+        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("creationDate"), date, ColumnType.DATE.getCode());
+
+        // Then
+        assertThat(account.getCreationDate()).isEqualTo(dateExpected);
     }
 
 

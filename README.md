@@ -109,14 +109,17 @@ You can convert different SQL types to java types. Only this ones are available 
 
 | SQL types  | Java types   | Conditions                             | 
 |------------|--------------|----------------------------------------|
-| DateTime   |  Date        |                                        |
-| DateTime   |  String      | Need date.output format in config file |   
+| DATE       |  Date        | For yyyy-MM-dd format in SQL           |
+| DATETIME   |  Date        |                                        |
+| DATETIME   |  String      | Need date.output format in config file |   
 | BIT        |  boolean     |                                        |
 | TINY       |  boolean     |                                        |
 | INT        |  int         |                                        |
 | LONG       |  long        |                                        |
 | FLOAT      |  float       |                                        |
-| STRING     |  String      |                                        |
+| VARCHAR    |  String      |                                        |
+| LONGTEXT   |  String      |                                        |
+| TINYTEXT   |  String      |                                        |
 
 ### Use the annotations for the repositories you'll use on your POJOs###
 
