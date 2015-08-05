@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
 
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -325,5 +326,17 @@ public class DomainClassAnalyzerTest {
         assertThat(account.getCreationDate()).isEqualTo(dateExpected);
     }
 
-
+    @Test
+    public void instantiateField_should_set_the_timestamp_with_the_specific_timestamp() throws ReflectiveOperationException, ParseException {
+        // Given
+        String timestampString = "2015-09-26 12:30:15";
+        Timestamp timestamp = Timestamp.valueOf(timestampString);
+        domainClassAnalyzer.postConstruct();
+        Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
+        // When
+        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("creationTimestamp"),
+                timestampString, ColumnType.TIMESTAMP.getCode());
+        // Then
+        assertThat(account.getCreationTimestamp()).isEqualTo(timestamp);
+    }
 }

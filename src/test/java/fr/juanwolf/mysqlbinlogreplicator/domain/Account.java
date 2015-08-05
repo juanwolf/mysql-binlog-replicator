@@ -26,6 +26,7 @@ import lombok.experimental.Accessors;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.*;
 
+import java.sql.Timestamp;
 import java.util.Date;
 
 /**
@@ -65,4 +66,8 @@ public class Account {
     @Getter
     @Field(index = FieldIndex.analyzed, type = FieldType.String)
     String dateString;
+
+    @Getter
+    @Field(index = FieldIndex.analyzed, type = FieldType.String)
+    Timestamp creationTimestamp;
 }

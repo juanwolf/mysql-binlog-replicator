@@ -17,8 +17,8 @@
 
 package fr.juanwolf.mysqlbinlogreplicator.component;
 
-import fr.juanwolf.mysqlbinlogreplicator.annotations.MysqlMapping;
 import com.github.shyiko.mysql.binlog.event.deserialization.ColumnType;
+import fr.juanwolf.mysqlbinlogreplicator.annotations.MysqlMapping;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +34,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -123,6 +124,9 @@ public class DomainClassAnalyzer {
                         "the timestamp as output of your date, set this property with a java DateFormat.");
                 field.set(object, date.toString());
             }
+        } else if (columnType == ColumnType.TIMESTAMP.getCode() || field.getType() == Timestamp.class) {
+            Timestamp timestamp = Timestamp.valueOf((String) value);
+            field.set(object, timestamp);
         } else if ((columnType == ColumnType.BIT.getCode() || columnType == ColumnType.TINY.getCode())
             && field.getType() == boolean.class) {
             boolean booleanField = ((Byte) value) != 0;

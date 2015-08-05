@@ -111,7 +111,8 @@ You can convert different SQL types to java types. Only this ones are available 
 |------------|--------------|----------------------------------------|
 | DATE       |  Date        | For yyyy-MM-dd format in SQL           |
 | DATETIME   |  Date        |                                        |
-| DATETIME   |  String      | Need date.output format in config file |   
+| DATETIME   |  String      | Need date.output format in config file |
+| TIMESTAMP  |  Timestamp   |                                        |
 | BIT        |  boolean     |                                        |
 | TINY       |  boolean     |                                        |
 | INT        |  int         |                                        |
@@ -121,7 +122,7 @@ You can convert different SQL types to java types. Only this ones are available 
 | LONGTEXT   |  String      |                                        |
 | TINYTEXT   |  String      |                                        |
 
-if you need any other mapping, please open issue.
+If you need any other mapping, please open issue.
 
 ### Use the annotations for the repositories you'll use on your POJOs###
 
