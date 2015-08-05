@@ -103,6 +103,21 @@ For example a class for accounts would look like :
 
 As you can see we keep the spring configuration for the elasticsearch repository AND the mysqlMapping annotation for the service.
 
+### Type Mapping ###
+
+You can convert different SQL types to java types. Only this ones are available :
+
+| SQL types  | Java types   | Conditions                             | 
+|------------|--------------|----------------------------------------|
+| DateTime   |  Date        |                                        |
+| DateTime   |  String      | Need date.output format in config file |   
+| BIT        |  boolean     |                                        |
+| TINY       |  boolean     |                                        |
+| INT        |  int         |                                        |
+| LONG       |  long        |                                        |
+| FLOAT      |  float       |                                        |
+| STRING     |  String      |                                        |
+
 ### Use the annotations for the repositories you'll use on your POJOs###
 
 #### ElasticSearch ####
