@@ -41,6 +41,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.StrictAssertions.fail;
@@ -297,11 +298,15 @@ public class DomainClassAnalyzerTest {
     }
 
     @Test
-    public void instantiateField_should_set_the_string_with_the_same_output_as_received_if_no_dateouput_()
+    public void instantiateField_should_set_the_string_with_the_default_locale_of_the_server_if_no_dateouput_()
             throws ReflectiveOperationException, ParseException {
         // Given
         // We need to reload the domainClassAnalyzer
         String date = "Wed Jul 22 13:00:00 CEST 2015";
+        Date dateExpected = BINLOG_DATETIME_FORMATTER.parse(date);
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.UK);
+        simpleDateFormat.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
+        String stringDateExpected = simpleDateFormat.format(dateExpected);
         domainClassAnalyzer.postConstruct();
         // When
         Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
@@ -309,7 +314,7 @@ public class DomainClassAnalyzerTest {
         domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("dateString"), date, ColumnType.DATETIME.getCode());
 
         // Then
-        assertThat(account.getDateString()).isEqualTo(date);
+        assertThat(account.getDateString()).isEqualTo(stringDateExpected);
     }
 
     @Test
