@@ -121,6 +121,8 @@ You can convert different SQL types to java types. Only this ones are available 
 | LONGTEXT   |  String      |                                        |
 | TINYTEXT   |  String      |                                        |
 
+if you need any other mapping, please open issue.
+
 ### Use the annotations for the repositories you'll use on your POJOs###
 
 #### ElasticSearch ####
