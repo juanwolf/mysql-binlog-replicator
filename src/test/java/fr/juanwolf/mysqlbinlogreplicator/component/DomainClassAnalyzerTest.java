@@ -306,7 +306,6 @@ public class DomainClassAnalyzerTest {
         Date dateExpected = BINLOG_DATETIME_FORMATTER.parse(date);
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.UK);
         simpleDateFormat.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
-        String stringDateExpected = simpleDateFormat.format(dateExpected);
         domainClassAnalyzer.postConstruct();
         // When
         Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
@@ -314,7 +313,7 @@ public class DomainClassAnalyzerTest {
         domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("dateString"), date, ColumnType.DATETIME.getCode());
 
         // Then
-        assertThat(account.getDateString()).isEqualTo(stringDateExpected);
+        assertThat(BINLOG_DATETIME_FORMATTER.parse(account.getDateString())).isEqualTo(dateExpected);
     }
 
     @Test
