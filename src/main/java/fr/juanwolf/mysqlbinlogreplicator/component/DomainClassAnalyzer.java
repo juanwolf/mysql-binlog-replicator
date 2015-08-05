@@ -34,6 +34,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -124,6 +125,9 @@ public class DomainClassAnalyzer {
                         "the timestamp as output of your date, set this property with a java DateFormat.");
                 field.set(object, date.toString());
             }
+        } else if (columnType == ColumnType.TIME.getCode()  && field.getType() == Time.class) {
+            Time time = Time.valueOf((String) value);
+            field.set(object, time);
         } else if (columnType == ColumnType.TIMESTAMP.getCode() || field.getType() == Timestamp.class) {
             Timestamp timestamp = Timestamp.valueOf((String) value);
             field.set(object, timestamp);

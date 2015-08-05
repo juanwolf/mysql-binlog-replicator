@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
 
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -338,5 +339,20 @@ public class DomainClassAnalyzerTest {
                 timestampString, ColumnType.TIMESTAMP.getCode());
         // Then
         assertThat(account.getCreationTimestamp()).isEqualTo(timestamp);
+    }
+
+
+    @Test
+    public void instantiateField_should_set_the_time_with_the_specific_time() throws ReflectiveOperationException, ParseException {
+        // Given
+        String timeString = "12:30:15";
+        Time time = Time.valueOf(timeString);
+        domainClassAnalyzer.postConstruct();
+        Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
+        // When
+        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("creationTime"),
+                timeString, ColumnType.TIME.getCode());
+        // Then
+        assertThat(account.getCreationTime()).isEqualTo(time);
     }
 }

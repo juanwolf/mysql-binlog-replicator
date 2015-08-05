@@ -107,21 +107,22 @@ As you can see we keep the spring configuration for the elasticsearch repository
 
 You can convert different SQL types to java types. Only this ones are available :
 
-| SQL types  | Java types   | Conditions                             | 
-|------------|--------------|----------------------------------------|
-| DATE       |  Date        | For yyyy-MM-dd format in SQL           |
-| DATETIME   |  Date        |                                        |
-| DATETIME   |  String      | Need date.output format in config file |
-| TIMESTAMP  |  Timestamp   |                                        |
-| BIT        |  boolean     |                                        |
-| TINY       |  boolean     |                                        |
-| INT        |  int         |                                        |
-| LONG       |  long        |                                        |
-| FLOAT      |  float       |                                        |
-| VARCHAR    |  String      |                                        |
-| LONGTEXT   |  String      |                                        |
-| TINYTEXT   |  String      |                                        |
-
+| SQL types  | Java types       | Conditions                             | 
+|------------|------------------|----------------------------------------|
+| DATE       |  Date            | For yyyy-MM-dd SQL format              |
+| DATETIME   |  Date            |                                        |
+| DATETIME   |  String          | Need date.output format in config file |
+| TIMESTAMP  |  sql.Timestamp   | For yyyy-MM-dd hh:mm:ss SQL format     |
+| TIME       |  sql.Time        | For hh:MM:ss SQL format                |
+| BIT        |  boolean         |                                        |
+| TINY       |  boolean         |                                        |
+| INT        |  int             |                                        |
+| LONG       |  long            |                                        |
+| FLOAT      |  float           |                                        |
+| VARCHAR    |  String          |                                        |
+| LONGTEXT   |  String          |                                        |
+| TINYTEXT   |  String          |                                        |
+    
 If you need any other mapping, please open issue.
 
 ### Use the annotations for the repositories you'll use on your POJOs###
