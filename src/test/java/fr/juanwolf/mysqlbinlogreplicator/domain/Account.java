@@ -19,10 +19,10 @@
 package fr.juanwolf.mysqlbinlogreplicator.domain;
 
 import fr.juanwolf.mysqlbinlogreplicator.annotations.MysqlMapping;
+import fr.juanwolf.mysqlbinlogreplicator.annotations.NestedMapping;
+import fr.juanwolf.mysqlbinlogreplicator.nested.SQLRelationship;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.experimental.Accessors;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.*;
 
@@ -75,4 +75,8 @@ public class Account {
     @Getter
     @Field(index = FieldIndex.analyzed, type = FieldType.String)
     Time creationTime;
+
+    @Getter
+    @NestedMapping(table = "cart", foreignKey = "pk_cart",sqlAssociaton = SQLRelationship.ONE_TO_ONE)
+    Cart cart;
 }

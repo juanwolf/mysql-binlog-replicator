@@ -20,6 +20,7 @@ package fr.juanwolf.mysqlbinlogreplicator.component;
 import com.github.shyiko.mysql.binlog.event.deserialization.ColumnType;
 import fr.juanwolf.mysqlbinlogreplicator.DomainClass;
 import fr.juanwolf.mysqlbinlogreplicator.annotations.MysqlMapping;
+import fr.juanwolf.mysqlbinlogreplicator.annotations.NestedMapping;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -85,6 +86,15 @@ public class DomainClassAnalyzer {
             CrudRepository crudRepository = (CrudRepository) applicationContext.getBean(mysqlMapping.repository());
             domainClass.setCrudRepository(crudRepository);
             domainClass.setTable(mysqlMapping.table());
+            List<Class> nestedClassesList = new ArrayList<>();
+            for (Field field : classDomain.getDeclaredFields()) {
+                NestedMapping nestedMapping = field.getAnnotation(NestedMapping.class);
+                if (nestedMapping != null) {
+                    nestedClassesList.add(field.getType());
+                    tableExpected.add(nestedMapping.table());
+                }
+            }
+            domainClass.setNestedDocumentsList(nestedClassesList);
             domainClassMap.put(domainClass.getTable(), domainClass);
         }
         if (environment.getProperty("date.output") != null) {

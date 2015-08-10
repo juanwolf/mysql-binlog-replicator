@@ -22,8 +22,10 @@ package fr.juanwolf.mysqlbinlogreplicator.component;
 import com.github.shyiko.mysql.binlog.event.deserialization.ColumnType;
 import fr.juanwolf.mysqlbinlogreplicator.DomainClass;
 import fr.juanwolf.mysqlbinlogreplicator.annotations.MysqlMapping;
+import fr.juanwolf.mysqlbinlogreplicator.annotations.NestedMapping;
 import fr.juanwolf.mysqlbinlogreplicator.dao.AccountRepository;
 import fr.juanwolf.mysqlbinlogreplicator.domain.Account;
+import fr.juanwolf.mysqlbinlogreplicator.domain.Cart;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -358,4 +360,26 @@ public class DomainClassAnalyzerTest {
         // Then
         assertThat(account.getCreationTime()).isEqualTo(time);
     }
+
+    @Test
+    public void postConstruct_should_set_the_DomainClass_nested_list_with_annotated_fields() {
+        // Given
+
+        // When
+        domainClassAnalyzer.postConstruct();
+        // Then
+        DomainClass domainClass = domainClassAnalyzer.getDomainClassMap().get("account");
+        assertThat(domainClass.getNestedDocumentsList()).contains(Cart.class);
+    }
+    
+    @Test
+    public void postConstruct_should_add_to_the_tableExpectedList_the_name_of_the_table() throws NoSuchFieldException {
+        // Given
+        String tableNameExpected = Account.class.getDeclaredField("cart").getAnnotation(NestedMapping.class).table();
+        // When
+        domainClassAnalyzer.postConstruct();
+        // Then
+        assertThat(domainClassAnalyzer.getTableExpected()).contains(tableNameExpected);
+    } 
+
 }
