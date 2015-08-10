@@ -19,6 +19,7 @@ package fr.juanwolf.mysqlbinlogreplicator.service;
 
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.event.*;
+import fr.juanwolf.mysqlbinlogreplicator.DomainClass;
 import fr.juanwolf.mysqlbinlogreplicator.component.DomainClassAnalyzer;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -66,29 +67,27 @@ public class MySQLEventListener implements BinaryLogClient.EventListener {
     }
 
     public void actionOnEvent(Event event) throws Exception {
-        CrudRepository currentRepository = domainClassAnalyzer.getRepositoryMap().get(tableName);
-        Class currentClass = domainClassAnalyzer.getDomainNameMap().get(tableName);
-        if (EventType.isDelete(event.getHeader().getEventType())) {
-            if (isTableConcern()) {
+        if (tableName != null && isTableConcern()) {
+            DomainClass domainClass = domainClassAnalyzer.getDomainClassMap().get(tableName);
+            CrudRepository currentRepository = domainClass.getCrudRepository();
+            Class currentClass = domainClass.getDomainClass();
+            if (EventType.isDelete(event.getHeader().getEventType())) {
                 Object domainObject = currentClass.cast(generateDomainObjectForDeleteEvent(event, tableName));
                 currentRepository.delete(domainObject);
                 log.debug("Object deleted : {}", domainObject.toString());
-            }
-        } else if (EventType.isUpdate(event.getHeader().getEventType())) {
-            if (isTableConcern()) {
+            } else if (EventType.isUpdate(event.getHeader().getEventType())) {
                 UpdateRowsEventData data = event.getData();
                 log.debug("Update event received data = {}", data);
                 Object domainObject = currentClass.cast(generateDomainObjectForUpdateEvent(event, tableName));
                 currentRepository.save(domainObject);
-            }
-        } else if (EventType.isWrite(event.getHeader().getEventType())) {
-            if (isTableConcern()) {
+            } else if (EventType.isWrite(event.getHeader().getEventType())) {
                 WriteRowsEventData data = event.getData();
                 log.debug("Write event received with data = {}", data);
                 Object currentClassInstance = currentClass.cast(generateDomainObjectForWriteEvent(event, tableName));
                 currentRepository.save(currentClassInstance);
             }
-        } else if (event.getHeader().getEventType() == EventType.TABLE_MAP) {
+        }
+        if (event.getHeader().getEventType() == EventType.TABLE_MAP) {
             TableMapEventData tableMapEventData = event.getData();
             tableName = tableMapEventData.getTable();
             if (!columnsTypes.containsKey(tableName)) {

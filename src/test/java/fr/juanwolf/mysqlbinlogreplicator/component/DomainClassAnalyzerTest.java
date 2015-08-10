@@ -20,6 +20,7 @@ package fr.juanwolf.mysqlbinlogreplicator.component;
 
 
 import com.github.shyiko.mysql.binlog.event.deserialization.ColumnType;
+import fr.juanwolf.mysqlbinlogreplicator.DomainClass;
 import fr.juanwolf.mysqlbinlogreplicator.annotations.MysqlMapping;
 import fr.juanwolf.mysqlbinlogreplicator.dao.AccountRepository;
 import fr.juanwolf.mysqlbinlogreplicator.domain.Account;
@@ -82,7 +83,7 @@ public class DomainClassAnalyzerTest {
         // When
         // domainClassAnalyzer.postConstruct();
         // Then
-        assertThat(domainClassAnalyzer.getDomainNameMap()).containsValue(_class);
+        assertThat(domainClassAnalyzer.getDomainClassMap().get("account").getDomainClass()).isEqualTo(_class);
     }
 
     @Test
@@ -141,9 +142,11 @@ public class DomainClassAnalyzerTest {
     public void generateInstanceFromName_should_return_null_if_no_constructor_exist() throws ReflectiveOperationException {
         // Given
         class NoConstructorClass {}
-        Map<String, Class> domainMap = domainClassAnalyzer.getDomainNameMap();
-        domainMap.put("noConstructorClass", NoConstructorClass.class);
-        domainClassAnalyzer.setDomainNameMap(domainMap);
+        Map<String, DomainClass> domainMap = domainClassAnalyzer.getDomainClassMap();
+        DomainClass domainClass = new DomainClass();
+        domainClass.setDomainClass(NoConstructorClass.class);
+        domainMap.put("noConstructorClass", domainClass);
+        domainClassAnalyzer.setDomainClassMap(domainMap);
         // When
         NoConstructorClass noConstructorObject = (NoConstructorClass) domainClassAnalyzer.generateInstanceFromName("noConstructorClass");
         // Then

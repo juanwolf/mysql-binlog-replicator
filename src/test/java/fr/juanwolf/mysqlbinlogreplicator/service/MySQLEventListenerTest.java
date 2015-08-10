@@ -21,7 +21,9 @@ package fr.juanwolf.mysqlbinlogreplicator.service;
 
 import com.github.shyiko.mysql.binlog.event.*;
 import com.github.shyiko.mysql.binlog.event.deserialization.ColumnType;
+import fr.juanwolf.mysqlbinlogreplicator.DomainClass;
 import fr.juanwolf.mysqlbinlogreplicator.component.DomainClassAnalyzer;
+import fr.juanwolf.mysqlbinlogreplicator.dao.AccountRepository;
 import fr.juanwolf.mysqlbinlogreplicator.domain.Account;
 import lombok.Getter;
 import org.junit.Before;
@@ -38,6 +40,7 @@ import java.text.ParseException;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 /**
@@ -46,18 +49,18 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class MySQLEventListenerTest {
 
-    Map<String, Class> domainNameMap;
+    Map<String, DomainClass> domainClassMap;
 
     @Spy
     DomainClassAnalyzer domainClassAnalyzer;
 
     @Mock
-    Map<String, CrudRepository> repositoryMap;
-
-    @Mock
     CrudRepository crudRepository;
 
     Event tableMapEvent;
+
+    @Mock
+    DomainClass domainClass;
 
     @Mock
     EventHeader tableMapEventHeader;
@@ -72,11 +75,12 @@ public class MySQLEventListenerTest {
 
     @Before
     public void setUp() {
-        domainNameMap = new HashMap<>();
-        domainNameMap.put("account", Account.class);
-        domainClassAnalyzer.setDomainNameMap(domainNameMap);
-        when(repositoryMap.get("newTable")).thenReturn(crudRepository);
-        when(domainClassAnalyzer.getRepositoryMap()).thenReturn(repositoryMap);
+        domainClassMap = new HashMap<>();
+        DomainClass domainClassAccount = new DomainClass();
+        domainClassAccount.setDomainClass(Account.class);
+        domainClassMap.put("account", domainClassAccount);
+        domainClassMap.put("newTable", domainClass);
+        when(domainClassAnalyzer.getDomainClassMap()).thenReturn(domainClassMap);
         when(tableMapEventHeader.getEventType()).thenReturn(EventType.TABLE_MAP);
         TableMapEventData tableMapEventData = new TableMapEventData();
         tableMapEventData.setTable(tableName);
@@ -95,28 +99,32 @@ public class MySQLEventListenerTest {
     }
 
     @Test
-    public void onEvent_should_add_entry_to_columnTypes_with_specific_type_array() {
+    public void actionOnEvent_should_add_entry_to_columnTypes_with_specific_type_array() throws Exception {
         // given
-        MySQLEventListener mySQLEventListener = new MySQLEventListener(new HashMap<>(), domainClassAnalyzer);
-
+        Map<String, DomainClass> localDomainClassMap = new HashMap<>();
+        when(domainClass.getCrudRepository()).thenReturn(crudRepository);
+        localDomainClassMap.put(tableName, domainClass);
+        domainClassAnalyzer.setDomainClassMap(localDomainClassMap);
+//        when(domainClassAnalyzer.getDomainClassMap()).thenReturn(localDomainClassMap);
+        MySQLEventListener listener = new MySQLEventListener(new HashMap<>(), domainClassAnalyzer);
         // when
-        mySQLEventListener.onEvent(this.tableMapEvent);
+        listener.actionOnEvent(tableMapEvent);
         // then
-        assertThat(mySQLEventListener.getColumnsTypes()).containsKey(tableName);
+        assertThat(listener.getColumnsTypes()).containsKey(tableName);
     }
 
     @Test
-    public void onEvent_should_change_the_tableName_when_a_new_TableMapEvent_is_received() {
+    public void actionOnEvent_should_change_the_tableName_when_a_new_TableMapEvent_is_received() throws Exception {
         // given
         String newTable = "newtable";
         TableMapEventData tableMapEventData = this.tableMapEvent.getData();
         tableMapEventData.setTable(newTable);
         Event newtableMapEvent = new Event(tableMapEventHeader, tableMapEventData);
-        MySQLEventListener mySQLEventListener = new MySQLEventListener(new HashMap<>(), domainClassAnalyzer);
-        mySQLEventListener.onEvent(this.tableMapEvent);
-
+        mySQLEventListener.actionOnEvent(this.tableMapEvent);
+        when(domainClass.getCrudRepository()).thenReturn(crudRepository);
+        when(domainClassAnalyzer.getTableExpected()).thenReturn(new ArrayList());
         // when
-        mySQLEventListener.onEvent(newtableMapEvent);
+        mySQLEventListener.actionOnEvent(newtableMapEvent);
         // then
         assertThat(mySQLEventListener.getTableName()).isEqualTo(newTable);
     }
@@ -125,7 +133,7 @@ public class MySQLEventListenerTest {
     public void getObjectFromRows_should_return_an_object_with_field_equals_to_null_for_empty_array() throws ReflectiveOperationException, ParseException {
         // given
         Serializable[] rows = {};
-        when(mySQLEventListener.getDomainClassAnalyzer().generateInstanceFromName("account")).thenReturn(new Account());
+        doReturn(new Account()).when(mySQLEventListener.getDomainClassAnalyzer()).generateInstanceFromName("account");
         // when
         Account object = (Account) mySQLEventListener.getObjectFromRows(rows, "account");
         // then
@@ -140,7 +148,7 @@ public class MySQLEventListenerTest {
         Object[] columns = {"mail"};
         setUpMySqlEventListener(columns, types);
         Serializable[] rows = {email};
-        when(domainClassAnalyzer.generateInstanceFromName("account")).thenReturn(new Account());
+        doReturn(new Account()).when(domainClassAnalyzer).generateInstanceFromName("account");
         // when
         Account object = (Account) mySQLEventListener.getObjectFromRows(rows, "account");
         // then
@@ -155,7 +163,7 @@ public class MySQLEventListenerTest {
         Object[] columns = {"no field"};
         setUpMySqlEventListener(columns, types);
         Serializable[] rows = {email};
-        when(domainClassAnalyzer.generateInstanceFromName("account")).thenReturn(new Account());
+        doReturn(new Account()).when(domainClassAnalyzer).generateInstanceFromName("account");
         // when
         Account object = (Account) mySQLEventListener.getObjectFromRows(rows, "account");
         // then
@@ -170,7 +178,7 @@ public class MySQLEventListenerTest {
         Object[] columns = {"mail"};
         setUpMySqlEventListener(columns, types);
         Serializable[] rows = {email};
-        when(domainClassAnalyzer.generateInstanceFromName("account")).thenReturn(new Account());
+        doReturn(new Account()).when(domainClassAnalyzer).generateInstanceFromName("account");
         // when
         Account object = (Account) mySQLEventListener.getObjectFromRows(rows, "account");
         // then
@@ -215,7 +223,7 @@ public class MySQLEventListenerTest {
         columnMap.put("account", columns);
         mySQLEventListener.setColumnMap(columnMap);
         mySQLEventListener.setColumnsTypes(columnsType);
-        when(domainClassAnalyzer.generateInstanceFromName("account")).thenReturn(new Account());
+        doReturn(new Account()).when(domainClassAnalyzer).generateInstanceFromName("account");
         UpdateRowsEventData updateRowsEventData = new UpdateRowsEventData();
         Map<Serializable[], Serializable[]> map = new HashMap<>();
         List<Map.Entry<Serializable[], Serializable[]>> datas = new ArrayList();
@@ -244,7 +252,7 @@ public class MySQLEventListenerTest {
         columnMap.put("account", columns);
         mySQLEventListener.setColumnMap(columnMap);
         mySQLEventListener.setColumnsTypes(columnsType);
-        when(domainClassAnalyzer.generateInstanceFromName("account")).thenReturn(new Account());
+        doReturn(new Account()).when(domainClassAnalyzer).generateInstanceFromName("account");
         DeleteRowsEventData deleteRowsEventData = new DeleteRowsEventData();
         List<Serializable[]> datas = new ArrayList();
         Serializable[] serializables = {"john@zen.com"};
@@ -367,14 +375,16 @@ public class MySQLEventListenerTest {
     }
 
     public void setUpDomainClassAnalyzer(CrudRepository crudRepository, Account account) throws ReflectiveOperationException {
-        Map<String, Class> domainMap = new HashMap<>();
+        Map<String, DomainClass> domainMap = new HashMap<>();
         List<String> tablesExpected = new ArrayList<>();
         tablesExpected.add("account");
-        domainMap.put("account", Account.class);
-        when(domainClassAnalyzer.getRepositoryMap().get(tableName)).thenReturn(crudRepository);
-        when(domainClassAnalyzer.getDomainNameMap()).thenReturn(domainMap);
+        DomainClass domainClass = new DomainClass();
+        domainClass.setDomainClass(Account.class);
+        domainClass.setCrudRepository(crudRepository);
+        domainMap.put("account", domainClass);
+        when(domainClassAnalyzer.getDomainClassMap()).thenReturn(domainMap);
         when(domainClassAnalyzer.getTableExpected()).thenReturn(tablesExpected);
-        when(domainClassAnalyzer.generateInstanceFromName("account")).thenReturn(account);
+        doReturn(account).when(domainClassAnalyzer).generateInstanceFromName("account");
     }
 
 

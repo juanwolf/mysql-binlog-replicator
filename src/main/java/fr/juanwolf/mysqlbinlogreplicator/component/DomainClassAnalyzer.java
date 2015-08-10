@@ -18,6 +18,7 @@
 package fr.juanwolf.mysqlbinlogreplicator.component;
 
 import com.github.shyiko.mysql.binlog.event.deserialization.ColumnType;
+import fr.juanwolf.mysqlbinlogreplicator.DomainClass;
 import fr.juanwolf.mysqlbinlogreplicator.annotations.MysqlMapping;
 import lombok.Getter;
 import lombok.Setter;
@@ -47,10 +48,7 @@ public class DomainClassAnalyzer {
 
     @Getter
     @Setter
-    private Map<String, Class> domainNameMap = new HashMap<>();
-
-    @Getter
-    private Map<String, CrudRepository> repositoryMap = new HashMap<>();
+    private Map<String, DomainClass> domainClassMap = new HashMap<>();
 
     @Autowired
     private ApplicationContext applicationContext;
@@ -81,10 +79,13 @@ public class DomainClassAnalyzer {
         while (iterator.hasNext()) {
             Class classDomain = iterator.next();
             MysqlMapping mysqlMapping = (MysqlMapping) classDomain.getAnnotation(MysqlMapping.class);
+            DomainClass domainClass = new DomainClass();
+            domainClass.setDomainClass(classDomain);
             tableExpected.add(mysqlMapping.table());
-            domainNameMap.put(mysqlMapping.table(), classDomain);
             CrudRepository crudRepository = (CrudRepository) applicationContext.getBean(mysqlMapping.repository());
-            repositoryMap.put(mysqlMapping.table(), crudRepository);
+            domainClass.setCrudRepository(crudRepository);
+            domainClass.setTable(mysqlMapping.table());
+            domainClassMap.put(domainClass.getTable(), domainClass);
         }
         if (environment.getProperty("date.output") != null) {
             binlogOutputDateFormatter = new SimpleDateFormat(environment.getProperty("date.output"));
@@ -92,11 +93,12 @@ public class DomainClassAnalyzer {
     }
 
     public Object generateInstanceFromName(String name) throws ReflectiveOperationException {
-        Class classAsked = domainNameMap.get(name);
-        if (classAsked == null) {
+        DomainClass domainClass = domainClassMap.get(name);
+        if (domainClass == null) {
             log.error("Class with name {} not found.", name);
             throw new ReflectiveOperationException();
         }
+        Class classAsked = domainClassMap.get(name).getDomainClass();
         try {
             Constructor classConstructor = classAsked.getConstructor();
             return classConstructor.newInstance();
@@ -141,8 +143,10 @@ public class DomainClassAnalyzer {
             field.set(object, Integer.parseInt((String) value));
         } else if (columnType == ColumnType.FLOAT.getCode() && field.getType() == float.class) {
             field.set(object, Float.parseFloat((String) value));
-        } else {
+        } else if (field.getType() == String.class){
             field.set(object, value);
+        } else {
+            // TODO Nested doc
         }
     }
 

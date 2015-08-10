@@ -27,4 +27,5 @@ import java.lang.annotation.Target;
 public @interface MysqlMapping {
     String table();
     String repository();
+    boolean nestedDocuments() default false;
 }
