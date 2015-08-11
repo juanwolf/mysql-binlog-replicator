@@ -26,6 +26,8 @@ import fr.juanwolf.mysqlbinlogreplicator.annotations.NestedMapping;
 import fr.juanwolf.mysqlbinlogreplicator.dao.AccountRepository;
 import fr.juanwolf.mysqlbinlogreplicator.domain.Account;
 import fr.juanwolf.mysqlbinlogreplicator.domain.Cart;
+import fr.juanwolf.mysqlbinlogreplicator.nested.NestedRowMapper;
+import fr.juanwolf.mysqlbinlogreplicator.nested.requester.OneToOneRequester;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,7 +37,11 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
+import org.springframework.jdbc.core.RowMapper;
 
+import java.lang.reflect.InvocationTargetException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DateFormat;
@@ -71,7 +77,7 @@ public class DomainClassAnalyzerTest {
     private Environment environment;
 
     @Before
-    public void setUp() {
+    public void setUp() throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         when(applicationContext.getBean("accountRepository")).thenReturn(accountRepository);
         when(environment.getProperty("date.output")).thenReturn(null);
         domainClassAnalyzer.setScanMapping(scanMapping);
@@ -108,7 +114,7 @@ public class DomainClassAnalyzerTest {
     }
 
     @Test
-    public void postContruct_should_set_the_dateOutputFormatter_if_a_dateoutput_is_given() {
+    public void postContruct_should_set_the_dateOutputFormatter_if_a_dateoutput_is_given() throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         // given
         String dateOutput = "YYYY-MM-dd";
         when(environment.getProperty("date.output")).thenReturn(dateOutput);
@@ -162,7 +168,7 @@ public class DomainClassAnalyzerTest {
         String mail = "awesome_identifier";
         Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
         // When
-        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("mail"), mail, 0);
+        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("mail"), mail, 0, "account");
 
         // Then
         assertThat(account.getMail()).isEqualTo(mail);
@@ -175,7 +181,7 @@ public class DomainClassAnalyzerTest {
         Date dateExpected = BINLOG_DATETIME_FORMATTER.parse(date);
         Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
         // When
-        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("creationDate"), date, ColumnType.DATETIME.getCode());
+        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("creationDate"), date, ColumnType.DATETIME.getCode(), "account");
 
         // Then
         assertThat(account.getCreationDate()).isEqualTo(dateExpected);
@@ -188,7 +194,7 @@ public class DomainClassAnalyzerTest {
         Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
         // When
         try {
-            domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("creationDate"), date, ColumnType.DATETIME.getCode());
+            domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("creationDate"), date, ColumnType.DATETIME.getCode(), "account");
             fail("ParseException expected.");
         } catch (ParseException e) {
             assertThat(e).hasMessage("Unparseable date: \"My nice date\"");
@@ -202,7 +208,7 @@ public class DomainClassAnalyzerTest {
         long valueExpected = 4;
         Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
         // When
-        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("identifier"), longValue, ColumnType.LONG.getCode());
+        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("identifier"), longValue, ColumnType.LONG.getCode(), "account");
         // Then
         assertThat(valueExpected).isEqualTo(account.getIdentifier());
 
@@ -215,7 +221,7 @@ public class DomainClassAnalyzerTest {
         float valueExpected = 4.5f;
         Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
         // When
-        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("cartAmount"), floatValue, ColumnType.FLOAT.getCode());
+        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("cartAmount"), floatValue, ColumnType.FLOAT.getCode(), "account");
         // Then
         assertThat(valueExpected).isEqualTo(account.getCartAmount());
     }
@@ -238,7 +244,7 @@ public class DomainClassAnalyzerTest {
         int idExpected = Integer.parseInt(id);
         Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
         // When
-        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("id"), id, ColumnType.LONG.getCode());
+        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("id"), id, ColumnType.LONG.getCode(), "account");
 
         // Then
         assertThat(account.getId()).isEqualTo(idExpected);
@@ -251,7 +257,7 @@ public class DomainClassAnalyzerTest {
         boolean valueExpected = true;
         Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
         // When
-        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("isAdmin"), isAdmin, ColumnType.BIT.getCode());
+        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("isAdmin"), isAdmin, ColumnType.BIT.getCode(), "account");
 
         // Then
         assertThat(account.isAdmin()).isEqualTo(valueExpected);
@@ -264,7 +270,7 @@ public class DomainClassAnalyzerTest {
         boolean valueExpected = true;
         Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
         // When
-        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("isAdmin"), isAdmin, ColumnType.TINY.getCode());
+        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("isAdmin"), isAdmin, ColumnType.TINY.getCode(), "account");
 
         // Then
         assertThat(account.isAdmin()).isEqualTo(valueExpected);
@@ -277,7 +283,7 @@ public class DomainClassAnalyzerTest {
         boolean valueExpected = false;
         Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
         // When
-        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("isAdmin"), isAdmin, ColumnType.TINY.getCode());
+        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("isAdmin"), isAdmin, ColumnType.TINY.getCode(), "account");
 
         // Then
         assertThat(account.isAdmin()).isEqualTo(valueExpected);
@@ -295,7 +301,7 @@ public class DomainClassAnalyzerTest {
         // When
         Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
         // When
-        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("dateString"), date, ColumnType.DATETIME.getCode());
+        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("dateString"), date, ColumnType.DATETIME.getCode(), "account");
 
         // Then
         assertThat(account.getDateString()).isEqualTo(dateStringExpected);
@@ -311,7 +317,7 @@ public class DomainClassAnalyzerTest {
         // When
         Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
         // When
-        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("dateString"), date, ColumnType.DATETIME.getCode());
+        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("dateString"), date, ColumnType.DATETIME.getCode(), "account");
 
         // Then
         assertThat(account.getDateString()).isEqualTo(date);
@@ -326,7 +332,7 @@ public class DomainClassAnalyzerTest {
         domainClassAnalyzer.postConstruct();
         Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
         // When
-        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("creationDate"), date, ColumnType.DATE.getCode());
+        domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("creationDate"), date, ColumnType.DATE.getCode(), "account");
 
         // Then
         assertThat(account.getCreationDate()).isEqualTo(dateExpected);
@@ -341,7 +347,7 @@ public class DomainClassAnalyzerTest {
         Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
         // When
         domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("creationTimestamp"),
-                timestampString, ColumnType.TIMESTAMP.getCode());
+                timestampString, ColumnType.TIMESTAMP.getCode(), "account");
         // Then
         assertThat(account.getCreationTimestamp()).isEqualTo(timestamp);
     }
@@ -356,24 +362,29 @@ public class DomainClassAnalyzerTest {
         Account account = (Account) domainClassAnalyzer.generateInstanceFromName("account");
         // When
         domainClassAnalyzer.instantiateField(account, account.getClass().getDeclaredField("creationTime"),
-                timeString, ColumnType.TIME.getCode());
+                timeString, ColumnType.TIME.getCode(), "account");
         // Then
         assertThat(account.getCreationTime()).isEqualTo(time);
     }
 
     @Test
-    public void postConstruct_should_set_the_DomainClass_nested_list_with_annotated_fields() {
+    public void postConstruct_should_set_the_DomainClass_nested_list_with_annotated_fields() throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         // Given
-
+        NestedRowMapper accountRowMapper = new NestedRowMapper(Account.class);
+        NestedRowMapper cartRowMapper = new NestedRowMapper(Cart.class);
+        OneToOneRequester<Account, Cart> accountToClassRequester = new OneToOneRequester<>("account", "cart",
+                accountRowMapper , cartRowMapper);
+        accountToClassRequester.setForeignKey("pk_cart");
+        accountToClassRequester.setPrimaryKeyForeignEntity("id");
         // When
         domainClassAnalyzer.postConstruct();
         // Then
         DomainClass domainClass = domainClassAnalyzer.getDomainClassMap().get("account");
-        assertThat(domainClass.getNestedDocumentsList()).contains(Cart.class);
+        assertThat(domainClass.getSqlRequesters()).containsValue(accountToClassRequester);
     }
     
     @Test
-    public void postConstruct_should_add_to_the_tableExpectedList_the_name_of_the_table() throws NoSuchFieldException {
+    public void postConstruct_should_add_to_the_tableExpectedList_the_name_of_the_table() throws NoSuchFieldException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         // Given
         String tableNameExpected = Account.class.getDeclaredField("cart").getAnnotation(NestedMapping.class).table();
         // When

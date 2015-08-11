@@ -77,6 +77,6 @@ public class Account {
     Time creationTime;
 
     @Getter
-    @NestedMapping(table = "cart", foreignKey = "pk_cart",sqlAssociaton = SQLRelationship.ONE_TO_ONE)
+    @NestedMapping(table = "cart", foreignKey="pk_cart", sqlAssociaton=SQLRelationship.ONE_TO_ONE)
     Cart cart;
 }

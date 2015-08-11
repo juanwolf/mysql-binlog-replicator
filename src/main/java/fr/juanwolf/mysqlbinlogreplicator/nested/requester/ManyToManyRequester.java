@@ -8,14 +8,15 @@ import java.util.List;
 /**
  * Created by juanwolf on 10/08/15.
  */
-public class ManyToManyRequester<T, N> extends SqlRequester{
+public class ManyToManyRequester<T, N> extends SQLRequester {
+
+    public ManyToManyRequester() {
+        super();
+    }
 
     public ManyToManyRequester(String entryTableName, String exitTableName, RowMapper<T> rowMapper,
                                RowMapper<N> foreignMapper) {
-        super.entryTableName = entryTableName;
-        super.exitTableName = exitTableName;
-        super.rowMapper = rowMapper;
-        super.foreignRowMapper = foreignMapper;
+        super(entryTableName, exitTableName, rowMapper, foreignMapper);
         super.sqlRelationship = SQLRelationship.MANY_TO_MANY;
     }
 

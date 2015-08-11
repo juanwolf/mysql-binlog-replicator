@@ -6,12 +6,16 @@ import org.springframework.jdbc.core.RowMapper;
 /**
  * Created by juanwolf on 10/08/15.
  */
-public class OneToOneRequester<T, N> extends SqlRequester {
+public class OneToOneRequester<T, N> extends SQLRequester {
 
-    public OneToOneRequester(String entryTableName, String exitTableName, RowMapper<T> rowMapper) {
-        super.entryTableName = entryTableName;
-        super.exitTableName = exitTableName;
-        super.rowMapper = rowMapper;
+    public OneToOneRequester() {
+        super();
+        super.sqlRelationship = SQLRelationship.ONE_TO_ONE;
+    }
+
+    public OneToOneRequester(String entryTableName, String exitTableName, RowMapper<T> rowMapper,
+                             RowMapper<N> foreignRowMapper) {
+        super(entryTableName, exitTableName, rowMapper, foreignRowMapper);
         super.sqlRelationship = SQLRelationship.ONE_TO_ONE;
     }
 

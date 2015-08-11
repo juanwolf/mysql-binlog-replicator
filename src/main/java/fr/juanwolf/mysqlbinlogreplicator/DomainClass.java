@@ -1,9 +1,10 @@
 package fr.juanwolf.mysqlbinlogreplicator;
 
+import fr.juanwolf.mysqlbinlogreplicator.nested.requester.SQLRequester;
 import lombok.Data;
 import org.springframework.data.repository.CrudRepository;
 
-import java.util.List;
+import java.util.Map;
 
 /**
  * Created by juanwolf on 07/08/15.
@@ -17,6 +18,6 @@ public class DomainClass {
 
     private Class domainClass;
 
-    private List<Class> nestedDocumentsList;
+    private Map<String, SQLRequester> sqlRequesters;
 
 }

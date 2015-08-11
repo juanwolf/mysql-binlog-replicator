@@ -127,7 +127,7 @@ public class MySQLEventListener implements BinaryLogClient.EventListener {
             if (rows[i] != null) {
                 try {
                     Field field = object.getClass().getDeclaredField(columns[i].toString());
-                    domainClassAnalyzer.instantiateField(object, field, rows[i].toString(), columnsType[i]);
+                    domainClassAnalyzer.instantiateField(object, field, rows[i].toString(), columnsType[i], tableName);
                     if (log.isDebugEnabled()) {
                         debugLogObject += columns[i] + "=" + rows[i].toString() + ", ";
                     }

@@ -8,14 +8,16 @@ import java.util.List;
 /**
  * Created by juanwolf on 10/08/15.
  */
-public class OneToManyRequester<T,N> extends SqlRequester {
+public class OneToManyRequester<T,N> extends SQLRequester {
+
+    public OneToManyRequester() {
+        super();
+        super.sqlRelationship = SQLRelationship.ONE_TO_MANY;
+    }
 
     public OneToManyRequester(String entryTableName, String exitTableName, RowMapper<T> rowMapper,
                               RowMapper<N> foreignMapper) {
-        super.entryTableName = entryTableName;
-        super.exitTableName = exitTableName;
-        super.rowMapper = rowMapper;
-        super.foreignRowMapper = foreignMapper;
+        super(entryTableName, exitTableName, rowMapper, foreignMapper);
         super.sqlRelationship = SQLRelationship.ONE_TO_MANY;
     }
 

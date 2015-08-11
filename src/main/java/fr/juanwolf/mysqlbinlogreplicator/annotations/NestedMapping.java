@@ -13,7 +13,24 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD})
 public @interface NestedMapping {
+
+    /**
+     * tablename for the foreign entity.
+     */
     String table();
+
+    /**
+     * @return The name of the foreign key for the current pojo
+     */
     String foreignKey();
+
+    /**
+     * @return The association between both objects
+     */
     SQLRelationship sqlAssociaton();
+
+    /**
+     * @return The name of the column for the primary key of the nested field.
+     */
+    String primaryKey() default "id";
 }
