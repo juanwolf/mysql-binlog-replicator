@@ -26,6 +26,7 @@ import fr.juanwolf.mysqlbinlogreplicator.nested.requester.SQLRequester;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.jboss.logging.annotations.Param;
 import org.reflections.Reflections;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +41,7 @@ import javax.annotation.PostConstruct;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DateFormat;
@@ -104,6 +106,14 @@ public class DomainClassAnalyzer {
                     sqlRequester.setExitTableName(nestedMapping.table());
                     sqlRequester.setForeignKey(nestedMapping.foreignKey());
                     sqlRequester.setPrimaryKeyForeignEntity(nestedMapping.primaryKey());
+                    sqlRequester.setEntryType(classDomain);
+                    Class foreignType = field.getType();
+                    if (field.getGenericType() instanceof ParameterizedType) {
+                        ParameterizedType genericType = (ParameterizedType) field.getGenericType();
+                        Class properType = (Class) genericType.getActualTypeArguments()[0];
+                        foreignType = properType;
+                    }
+                    sqlRequester.setForeignType(foreignType);
                     sqlRequester.setJdbcTemplate(jdbcTemplate);
                     NestedRowMapper currentClassNestedRowMapper = new NestedRowMapper(classDomain);
                     NestedRowMapper foreignClassNestedRowMapper = new NestedRowMapper(field.getType());
@@ -188,7 +198,6 @@ public class DomainClassAnalyzer {
     }
 
     // TOOLS
-
     static boolean isInteger(Field field) {
         return field.getType() == Integer.class || field.getType() == int.class;
     }

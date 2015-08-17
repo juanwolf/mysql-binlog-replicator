@@ -21,6 +21,10 @@ public abstract class SQLRequester<T, N> {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
+    Class<T> entryType;
+
+    Class<N> foreignType;
+
     /**
      * TableName for the entry T Class
      */

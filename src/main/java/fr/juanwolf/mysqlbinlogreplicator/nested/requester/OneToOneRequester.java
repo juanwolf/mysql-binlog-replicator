@@ -21,7 +21,6 @@ public class OneToOneRequester<T, N> extends SQLRequester {
 
     @Override
     public N queryForeignEntity(String foreignKey, String primaryKey, String value) {
-
         return (N) jdbcTemplate.queryForObject("SELECT FROM " + exitTableName
                 + "INNER JOIN " + super.entryTableName + " ON "
                 + super.entryTableName + "." + foreignKey + "=" + exitTableName + "." + primaryKey

@@ -22,11 +22,12 @@ public class OneToManyRequester<T,N> extends SQLRequester {
     }
 
     @Override
-    public List<N> queryForeignEntity(String foreignKey, String primaryKey, String value) {
-        return (List<N>) jdbcTemplate.queryForList("SELECT FROM " + exitTableName
+    public List<N> queryForeignEntity(String foreignKeyInForeignObject, String primaryKey, String value) {
+        final String query = "SELECT * FROM " + exitTableName + " "
                 + "INNER JOIN " + super.entryTableName + " ON "
-                + super.entryTableName + "." + foreignKey + "=" + exitTableName + "." + primaryKey
-                + "WHERE " + primaryKey + "=" + value, foreignRowMapper);
+                + super.entryTableName + "." + primaryKey + "=" + exitTableName + "." + foreignKeyInForeignObject + " "
+                + "WHERE " + super.entryTableName + "." + primaryKey + "=" + value;
+        return jdbcTemplate.queryForList(query, foreignType);
     }
 
     @Override

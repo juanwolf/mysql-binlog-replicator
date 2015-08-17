@@ -25,6 +25,7 @@ import fr.juanwolf.mysqlbinlogreplicator.annotations.MysqlMapping;
 import fr.juanwolf.mysqlbinlogreplicator.annotations.NestedMapping;
 import fr.juanwolf.mysqlbinlogreplicator.dao.AccountRepository;
 import fr.juanwolf.mysqlbinlogreplicator.domain.Account;
+import fr.juanwolf.mysqlbinlogreplicator.domain.Bill;
 import fr.juanwolf.mysqlbinlogreplicator.domain.Cart;
 import fr.juanwolf.mysqlbinlogreplicator.nested.NestedRowMapper;
 import fr.juanwolf.mysqlbinlogreplicator.nested.requester.OneToOneRequester;
@@ -37,8 +38,10 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -47,12 +50,13 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.StrictAssertions.anyOf;
 import static org.assertj.core.api.StrictAssertions.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -75,6 +79,9 @@ public class DomainClassAnalyzerTest {
 
     @Mock
     private Environment environment;
+
+    @Mock
+    private JdbcTemplate jdbcTemplate;
 
     @Before
     public void setUp() throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
@@ -374,6 +381,9 @@ public class DomainClassAnalyzerTest {
         NestedRowMapper cartRowMapper = new NestedRowMapper(Cart.class);
         OneToOneRequester<Account, Cart> accountToClassRequester = new OneToOneRequester<>("account", "cart",
                 accountRowMapper , cartRowMapper);
+        accountToClassRequester.setJdbcTemplate(jdbcTemplate);
+        accountToClassRequester.setEntryType(Account.class);
+        accountToClassRequester.setForeignType(Cart.class);
         accountToClassRequester.setForeignKey("pk_cart");
         accountToClassRequester.setPrimaryKeyForeignEntity("id");
         // When
@@ -392,5 +402,34 @@ public class DomainClassAnalyzerTest {
         // Then
         assertThat(domainClassAnalyzer.getTableExpected()).contains(tableNameExpected);
     } 
+    
+    @Test
+    public void generateNestedField_should_create_an_instance_of_Cart() throws NoSuchFieldException {
+        // Given
+        Account account = new Account();
+        Field field  = account.getClass().getDeclaredField("cart");
+        Cart cartExpected = new Cart();
+        cartExpected.setAmount(1500);
+        when(jdbcTemplate.queryForObject(anyString(), (RowMapper<Object>) any())).thenReturn(cartExpected);
+        // When
+        Cart cart = (Cart) domainClassAnalyzer.generateNestedField(field, "1", "account");
+        // Then
+        assertThat(cart).isEqualToComparingFieldByField(cartExpected);
+    }
+
+    @Test
+    public void generateNestedField_should_create_an_instance_of_list_of_bills() throws NoSuchFieldException {
+        // Given
+        Account account = new Account();
+        String requestExpected = "SELECT * FROM bill INNER JOIN account ON account.id=bill.pk_account WHERE account.id=1";
+        Field field  = account.getClass().getDeclaredField("bills");
+        List<Bill> billList = new ArrayList<>();
+        billList.add(new Bill());
+        when(jdbcTemplate.queryForList(requestExpected, Bill.class)).thenReturn(billList);
+        // When
+        List<Bill> bills = (List<Bill>) domainClassAnalyzer.generateNestedField(field, "1", "account");
+        // Then
+         assertThat(bills).isEqualTo(billList);
+    }
 
 }

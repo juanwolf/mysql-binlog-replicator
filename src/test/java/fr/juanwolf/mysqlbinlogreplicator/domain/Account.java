@@ -29,6 +29,7 @@ import org.springframework.data.elasticsearch.annotations.*;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by juanwolf on 17/07/15.
@@ -79,4 +80,11 @@ public class Account {
     @Getter
     @NestedMapping(table = "cart", foreignKey="pk_cart", sqlAssociaton=SQLRelationship.ONE_TO_ONE)
     Cart cart;
+
+    @Getter
+    double giftCardAmount;
+
+    @Getter
+    @NestedMapping(table="bill", foreignKey = "pk_account", sqlAssociaton=SQLRelationship.ONE_TO_MANY)
+    List<Bill> bills;
 }

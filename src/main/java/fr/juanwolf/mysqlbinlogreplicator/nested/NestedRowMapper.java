@@ -22,7 +22,7 @@ public class NestedRowMapper implements RowMapper {
 
     public NestedRowMapper(Class nestedObjectClass) {
         this.nestedObjectClass = nestedObjectClass;
-        fields = this.nestedObjectClass.getFields();
+        fields = this.nestedObjectClass.getDeclaredFields();
     }
 
     @Override
@@ -31,29 +31,42 @@ public class NestedRowMapper implements RowMapper {
             Constructor nestedConstructor = nestedObjectClass.getConstructor();
             Object nestedObject = nestedConstructor.newInstance();
             for (Field field : fields) {
+                field.setAccessible(true);
                 if (field.getType() == int.class) {
-                    resultSet.getInt(field.getName());
+                    int intValue = resultSet.getInt(field.getName());
+                    field.set(nestedObject, intValue);
                 } else if (field.getType() == String.class) {
-                    resultSet.getString(field.getName());
+                    String resultString = resultSet.getString(field.getName());
+                    field.set(nestedObject, resultString);
                 } else if (field.getType() == Date.class) {
-                    resultSet.getDate(field.getName());
+                    Date dateValue = resultSet.getDate(field.getName());
+                    field.set(nestedObject, dateValue);
                 } else if (field.getType() == long.class) {
-                    resultSet.getLong(field.getName());
+                    long longValue = resultSet.getLong(field.getName());
+                    field.set(nestedObject, longValue);
                 } else if (field.getType() == boolean.class) {
-                    resultSet.getBoolean(field.getName());
+                    boolean booleanValue = resultSet.getBoolean(field.getName());
+                    field.set(nestedObject, booleanValue);
                 } else if (field.getType() == Time.class) {
-                    resultSet.getTime(field.getName());
+                    Time timeValue = resultSet.getTime(field.getName());
+                    field.set(nestedObject, timeValue);
                 } else if (field.getType() == float.class) {
-                    resultSet.getFloat(field.getName());
+                    float floatValue = resultSet.getFloat(field.getName());
+                    field.set(nestedObject, floatValue);
                 } else if (field.getType() == double.class) {
-                    resultSet.getDouble(field.getName());
+                    double doubleValue = resultSet.getDouble(field.getName());
+                    field.set(nestedObject, doubleValue);
                 }
+                field.setAccessible(false);
             }
             return nestedObject;
-        } catch (Exception e) {
-            log.error("No empty constructor for the class {}", nestedObjectClass, e);
-            return null;
+        } catch (NoSuchMethodException e) {
+            log.error("No empty constructor for the class {}. Please, create one to make this object instantiable.",
+                    nestedObjectClass, e);
+        } catch (Exception exception) {
+            log.error("An exception occurred: ", exception);
         }
+        return null;
     }
 
     @Override
