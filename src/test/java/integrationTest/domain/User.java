@@ -16,7 +16,7 @@
 */
 
 
-package fr.juanwolf.mysqlbinlogreplicator.domain;
+package integrationTest.domain;
 
 import fr.juanwolf.mysqlbinlogreplicator.annotations.MysqlMapping;
 import fr.juanwolf.mysqlbinlogreplicator.annotations.NestedMapping;
@@ -34,14 +34,14 @@ import java.util.List;
 /**
  * Created by juanwolf on 17/07/15.
  */
-@Document(indexName = "account")
-@Mapping(mappingPath = "account")
-@MysqlMapping(table = "account", repository="accountRepository")
-public class Account {
+@Document(indexName = "user")
+@Mapping(mappingPath = "user")
+@MysqlMapping(table = "user", repository="userRepository")
+public class User {
     @Id
     @Setter
     @Getter
-    int id;
+    Integer id;
 
     @Getter
     @Field(type = FieldType.Long, index = FieldIndex.analyzed)
@@ -60,10 +60,10 @@ public class Account {
     @Field(index = FieldIndex.analyzed, type = FieldType.Float)
     float cartAmount;
 
-    @Getter
-    @Setter
-    @Field(index = FieldIndex.analyzed, type = FieldType.Boolean)
-    boolean isAdmin;
+//    @Getter
+//    @Setter
+//    @Field(index = FieldIndex.analyzed, type = FieldType.Boolean)
+//    boolean isAdmin;
 
     @Getter
     @Field(index = FieldIndex.analyzed, type = FieldType.String)
@@ -78,13 +78,7 @@ public class Account {
     Time creationTime;
 
     @Getter
-    @NestedMapping(table = "cart", foreignKey="pk_cart", sqlAssociaton=SQLRelationship.ONE_TO_ONE)
+    @NestedMapping(table = "cart", foreignKey="cart_id", sqlAssociaton=SQLRelationship.ONE_TO_ONE)
     Cart cart;
 
-    @Getter
-    double giftCardAmount;
-
-    @Getter
-    @NestedMapping(table="bill", foreignKey = "pk_account", sqlAssociaton=SQLRelationship.ONE_TO_MANY)
-    List<Bill> bills;
 }

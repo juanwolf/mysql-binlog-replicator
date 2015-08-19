@@ -1,6 +1,6 @@
 package fr.juanwolf.mysqlbinlogreplicator.requester;
 
-import fr.juanwolf.mysqlbinlogreplicator.domain.Account;
+import fr.juanwolf.mysqlbinlogreplicator.domain.User;
 import fr.juanwolf.mysqlbinlogreplicator.nested.NestedRowMapper;
 import org.junit.Before;
 import org.junit.Test;
@@ -10,7 +10,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Date;
 import java.util.Calendar;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,7 +28,7 @@ public class NestedRowMapperTest {
 
     @Before
     public void setUp() {
-        nestedRowMapper = new NestedRowMapper(Account.class);
+        nestedRowMapper = new NestedRowMapper(User.class);
     }
 
     @Test
@@ -52,9 +51,9 @@ public class NestedRowMapperTest {
         String email = "HULK@shield.com";
         when(resultSet.getString("mail")).thenReturn(email);
         // When
-        Account account = (Account) nestedRowMapper.mapRow(resultSet, 0);
+        User user = (User) nestedRowMapper.mapRow(resultSet, 0);
         // Then
-        assertThat(account.getMail()).isEqualTo(email);
+        assertThat(user.getMail()).isEqualTo(email);
     }
 
     @Test
@@ -66,9 +65,9 @@ public class NestedRowMapperTest {
         java.sql.Date date = new java.sql.Date(currentDate.getTime());
         when(resultSet.getDate("creationDate")).thenReturn(date);
         // When
-        Account account = (Account) nestedRowMapper.mapRow(resultSet, 0);
+        User user = (User) nestedRowMapper.mapRow(resultSet, 0);
         // Then
-        assertThat(account.getCreationDate()).isEqualTo(date);
+        assertThat(user.getCreationDate()).isEqualTo(date);
     }
 
     @Test
@@ -77,9 +76,9 @@ public class NestedRowMapperTest {
         float cartAmount = 1500;
         when(resultSet.getFloat("cartAmount")).thenReturn(cartAmount);
         // When
-        Account account = (Account) nestedRowMapper.mapRow(resultSet, 0);
+        User user = (User) nestedRowMapper.mapRow(resultSet, 0);
         // Then
-        assertThat(account.getCartAmount()).isEqualTo(cartAmount);
+        assertThat(user.getCartAmount()).isEqualTo(cartAmount);
     }
 
     @Test
@@ -88,8 +87,8 @@ public class NestedRowMapperTest {
         double giftCardAmount = 1500;
         when(resultSet.getDouble("giftCardAmount")).thenReturn(giftCardAmount);
         // When
-        Account account = (Account) nestedRowMapper.mapRow(resultSet, 0);
+        User user = (User) nestedRowMapper.mapRow(resultSet, 0);
         // Then
-        assertThat(account.getGiftCardAmount()).isEqualTo(giftCardAmount);
+        assertThat(user.getGiftCardAmount()).isEqualTo(giftCardAmount);
     }
 }

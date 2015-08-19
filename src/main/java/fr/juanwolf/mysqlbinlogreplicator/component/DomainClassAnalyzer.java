@@ -26,7 +26,6 @@ import fr.juanwolf.mysqlbinlogreplicator.nested.requester.SQLRequester;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.jboss.logging.annotations.Param;
 import org.reflections.Reflections;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -107,6 +106,7 @@ public class DomainClassAnalyzer {
                     sqlRequester.setForeignKey(nestedMapping.foreignKey());
                     sqlRequester.setPrimaryKeyForeignEntity(nestedMapping.primaryKey());
                     sqlRequester.setEntryType(classDomain);
+                    sqlRequester.setAssociatedField(field);
                     Class foreignType = field.getType();
                     if (field.getGenericType() instanceof ParameterizedType) {
                         ParameterizedType genericType = (ParameterizedType) field.getGenericType();

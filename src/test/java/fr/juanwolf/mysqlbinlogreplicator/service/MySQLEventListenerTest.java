@@ -23,8 +23,10 @@ import com.github.shyiko.mysql.binlog.event.*;
 import com.github.shyiko.mysql.binlog.event.deserialization.ColumnType;
 import fr.juanwolf.mysqlbinlogreplicator.DomainClass;
 import fr.juanwolf.mysqlbinlogreplicator.component.DomainClassAnalyzer;
-import fr.juanwolf.mysqlbinlogreplicator.dao.AccountRepository;
-import fr.juanwolf.mysqlbinlogreplicator.domain.Account;
+import fr.juanwolf.mysqlbinlogreplicator.dao.UserRepository;
+import fr.juanwolf.mysqlbinlogreplicator.nested.requester.OneToOneRequester;
+import fr.juanwolf.mysqlbinlogreplicator.nested.requester.SQLRequester;
+import integrationTest.domain.User;
 import lombok.Getter;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,17 +70,22 @@ public class MySQLEventListenerTest {
     @Mock
     EventHeader eventHeader;
 
-    final String tableName = "account";
+    final String tableName = "user";
 
     @InjectMocks
     MySQLEventListener mySQLEventListener;
 
     @Before
-    public void setUp() {
+    public void setUp() throws NoSuchFieldException {
         domainClassMap = new HashMap<>();
         DomainClass domainClassAccount = new DomainClass();
-        domainClassAccount.setDomainClass(Account.class);
-        domainClassMap.put("account", domainClassAccount);
+        domainClassAccount.setDomainClass(User.class);
+        SQLRequester cartSQLRequester = new OneToOneRequester<>();
+        cartSQLRequester.setAssociatedField(User.class.getDeclaredField("cart"));
+        Map<String, SQLRequester> sqlRequesterMap = new HashMap<>();
+        sqlRequesterMap.put("cart", cartSQLRequester);
+        domainClassAccount.setSqlRequesters(sqlRequesterMap);
+        domainClassMap.put("user", domainClassAccount);
         domainClassMap.put("newTable", domainClass);
         when(domainClassAnalyzer.getDomainClassMap()).thenReturn(domainClassMap);
         when(tableMapEventHeader.getEventType()).thenReturn(EventType.TABLE_MAP);
@@ -133,11 +140,11 @@ public class MySQLEventListenerTest {
     public void getObjectFromRows_should_return_an_object_with_field_equals_to_null_for_empty_array() throws ReflectiveOperationException, ParseException {
         // given
         Serializable[] rows = {};
-        doReturn(new Account()).when(mySQLEventListener.getDomainClassAnalyzer()).generateInstanceFromName("account");
+        doReturn(new User()).when(mySQLEventListener.getDomainClassAnalyzer()).generateInstanceFromName("user");
         // when
-        Account object = (Account) mySQLEventListener.getObjectFromRows(rows, "account");
+        User object = (User) mySQLEventListener.getObjectFromRows(rows, "user");
         // then
-        assertThat(object).isEqualToComparingFieldByField(new Account());
+        assertThat(object).isEqualToComparingFieldByField(new User());
     }
 
     @Test
@@ -148,9 +155,9 @@ public class MySQLEventListenerTest {
         Object[] columns = {"mail"};
         setUpMySqlEventListener(columns, types);
         Serializable[] rows = {email};
-        doReturn(new Account()).when(domainClassAnalyzer).generateInstanceFromName("account");
+        doReturn(new User()).when(domainClassAnalyzer).generateInstanceFromName("user");
         // when
-        Account object = (Account) mySQLEventListener.getObjectFromRows(rows, "account");
+        User object = (User) mySQLEventListener.getObjectFromRows(rows, "user");
         // then
         assertThat(object.getMail()).isEqualTo(email);
     }
@@ -163,11 +170,11 @@ public class MySQLEventListenerTest {
         Object[] columns = {"no field"};
         setUpMySqlEventListener(columns, types);
         Serializable[] rows = {email};
-        doReturn(new Account()).when(domainClassAnalyzer).generateInstanceFromName("account");
+        doReturn(new User()).when(domainClassAnalyzer).generateInstanceFromName("user");
         // when
-        Account object = (Account) mySQLEventListener.getObjectFromRows(rows, "account");
+        User object = (User) mySQLEventListener.getObjectFromRows(rows, "user");
         // then
-        assertThat(object).isEqualToComparingFieldByField(new Account());
+        assertThat(object).isEqualToComparingFieldByField(new User());
     }
 
     @Test
@@ -178,20 +185,20 @@ public class MySQLEventListenerTest {
         Object[] columns = {"mail"};
         setUpMySqlEventListener(columns, types);
         Serializable[] rows = {email};
-        doReturn(new Account()).when(domainClassAnalyzer).generateInstanceFromName("account");
+        doReturn(new User()).when(domainClassAnalyzer).generateInstanceFromName("user");
         // when
-        Account object = (Account) mySQLEventListener.getObjectFromRows(rows, "account");
+        User object = (User) mySQLEventListener.getObjectFromRows(rows, "user");
         // then
-        assertThat(object).isEqualToComparingFieldByField(new Account());
+        assertThat(object).isEqualToComparingFieldByField(new User());
     }
 
     @Test
     public void isTableConcern_should_return_true_if_the_table_is_contain_in_the_list() {
         // Given
         List<String> tablesExpected = new ArrayList<>();
-        tablesExpected.add("account");
+        tablesExpected.add("user");
         when(domainClassAnalyzer.getTableExpected()).thenReturn(tablesExpected);
-        mySQLEventListener.setTableName("account");
+        mySQLEventListener.setTableName("user");
         // When
         boolean isTableConcern = mySQLEventListener.isTableConcern();
         // Then
@@ -204,7 +211,7 @@ public class MySQLEventListenerTest {
         // Given
         List<String> tablesExpected = new ArrayList<>();
         when(domainClassAnalyzer.getTableExpected()).thenReturn(tablesExpected);
-        mySQLEventListener.setTableName("account");
+        mySQLEventListener.setTableName("user");
         // When
         boolean isTableConcern = mySQLEventListener.isTableConcern();
         // Then
@@ -217,13 +224,13 @@ public class MySQLEventListenerTest {
         // Given
         Map<String, byte[]> columnsType = new HashMap<>();
         byte[] types = { (byte) ColumnType.VARCHAR.getCode()};
-        columnsType.put("account", types);
+        columnsType.put("user", types);
         Map<String, Object[]> columnMap = new HashMap<>();
         Object[] columns = {"mail"};
-        columnMap.put("account", columns);
+        columnMap.put("user", columns);
         mySQLEventListener.setColumnMap(columnMap);
         mySQLEventListener.setColumnsTypes(columnsType);
-        doReturn(new Account()).when(domainClassAnalyzer).generateInstanceFromName("account");
+        doReturn(new User()).when(domainClassAnalyzer).generateInstanceFromName("user");
         UpdateRowsEventData updateRowsEventData = new UpdateRowsEventData();
         Map<Serializable[], Serializable[]> map = new HashMap<>();
         List<Map.Entry<Serializable[], Serializable[]>> datas = new ArrayList();
@@ -232,12 +239,12 @@ public class MySQLEventListenerTest {
         datas.add(map.entrySet().stream().findFirst().get());
         updateRowsEventData.setRows(datas);
         Event event = new Event(tableMapEventHeader, updateRowsEventData);
-        Account accountExpected = new Account();
-        accountExpected.setMail("john@zen.com");
+        User userExpected = new User();
+        userExpected.setMail("john@zen.com");
         // When
-        Object updatedObject = mySQLEventListener.generateDomainObjectForUpdateEvent(event, "account");
+        Object updatedObject = mySQLEventListener.generateDomainObjectForUpdateEvent(event, "user");
         // Then
-        assertThat(updatedObject).isEqualToComparingFieldByField(accountExpected);
+        assertThat(updatedObject).isEqualToComparingFieldByField(userExpected);
 
     }
 
@@ -246,25 +253,25 @@ public class MySQLEventListenerTest {
         // Given
         Map<String, byte[]> columnsType = new HashMap<>();
         byte[] types = { (byte) ColumnType.VARCHAR.getCode()};
-        columnsType.put("account", types);
+        columnsType.put("user", types);
         Map<String, Object[]> columnMap = new HashMap<>();
         Object[] columns = {"mail"};
-        columnMap.put("account", columns);
+        columnMap.put("user", columns);
         mySQLEventListener.setColumnMap(columnMap);
         mySQLEventListener.setColumnsTypes(columnsType);
-        doReturn(new Account()).when(domainClassAnalyzer).generateInstanceFromName("account");
+        doReturn(new User()).when(domainClassAnalyzer).generateInstanceFromName("user");
         DeleteRowsEventData deleteRowsEventData = new DeleteRowsEventData();
         List<Serializable[]> datas = new ArrayList();
         Serializable[] serializables = {"john@zen.com"};
         datas.add(serializables);
         deleteRowsEventData.setRows(datas);
         Event event = new Event(tableMapEventHeader, deleteRowsEventData);
-        Account accountExpected = new Account();
-        accountExpected.setMail("john@zen.com");
+        User userExpected = new User();
+        userExpected.setMail("john@zen.com");
         // When
-        Object updatedObject = mySQLEventListener.generateDomainObjectForDeleteEvent(event, "account");
+        Object updatedObject = mySQLEventListener.generateDomainObjectForDeleteEvent(event, "user");
         // Then
-        assertThat(updatedObject).isEqualToComparingFieldByField(accountExpected);
+        assertThat(updatedObject).isEqualToComparingFieldByField(userExpected);
 
     }
 
@@ -274,19 +281,19 @@ public class MySQLEventListenerTest {
         byte[] types = { (byte) ColumnType.VARCHAR.getCode()};
         Object[] columns = {"mail"};
         setUpMySqlEventListener(columns, types);
-        setUpDomainClassAnalyzer(null, new Account());
+        setUpDomainClassAnalyzer(null, new User());
         WriteRowsEventData updateRowsEventData = new WriteRowsEventData();
         List<Serializable[]> datas = new ArrayList();
         Serializable[] serializables = {"john@zen.com"};
         datas.add(serializables);
         updateRowsEventData.setRows(datas);
         Event event = new Event(tableMapEventHeader, updateRowsEventData);
-        Account accountExpected = new Account();
-        accountExpected.setMail("john@zen.com");
+        User userExpected = new User();
+        userExpected.setMail("john@zen.com");
         // When
-        Object updatedObject = mySQLEventListener.generateDomainObjectForWriteEvent(event, "account");
+        Object updatedObject = mySQLEventListener.generateDomainObjectForWriteEvent(event, "user");
         // Then
-        assertThat(updatedObject).isEqualToComparingFieldByField(accountExpected);
+        assertThat(updatedObject).isEqualToComparingFieldByField(userExpected);
 
     }
 
@@ -295,9 +302,9 @@ public class MySQLEventListenerTest {
         // given
         when(eventHeader.getEventType()).thenReturn(EventType.DELETE_ROWS);
         StubRepository stubRepository = new StubRepository();
-        Account accountToDelete = new Account();
-        stubRepository.save(accountToDelete);
-        setUpDomainClassAnalyzer(stubRepository, accountToDelete);
+        User userToDelete = new User();
+        stubRepository.save(userToDelete);
+        setUpDomainClassAnalyzer(stubRepository, userToDelete);
         byte[] types = {};
         Object[] columns = {};
         setUpMySqlEventListener(columns, types);
@@ -319,9 +326,9 @@ public class MySQLEventListenerTest {
         // given
         when(eventHeader.getEventType()).thenReturn(EventType.WRITE_ROWS);
         StubRepository stubRepository = new StubRepository();
-        Account accountToAdd = new Account();
-        accountToAdd.setMail("test@test.com");
-        setUpDomainClassAnalyzer(stubRepository, accountToAdd);
+        User userToAdd = new User();
+        userToAdd.setMail("test@test.com");
+        setUpDomainClassAnalyzer(stubRepository, userToAdd);
         byte[] types = { (byte) ColumnType.VARCHAR.getCode()};
         Object[] columns = { "mail" };
         setUpMySqlEventListener(columns, types);
@@ -343,8 +350,8 @@ public class MySQLEventListenerTest {
         String emailExpected = "test@test.com";
         when(eventHeader.getEventType()).thenReturn(EventType.UPDATE_ROWS);
         StubRepository stubRepository = new StubRepository();
-        Account accountToUpdate = new Account();
-        setUpDomainClassAnalyzer(stubRepository, accountToUpdate);
+        User userToUpdate = new User();
+        setUpDomainClassAnalyzer(stubRepository, userToUpdate);
         byte[] types = { (byte) ColumnType.VARCHAR.getCode()};
         Object[] columns = { "mail" };
         setUpMySqlEventListener(columns, types);
@@ -358,33 +365,40 @@ public class MySQLEventListenerTest {
         // when
         mySQLEventListener.onEvent(event);
         // then
-        String emailOfUpdatedAccount = ((Account)stubRepository.getElementList().get(0)).getMail();
+        String emailOfUpdatedAccount = ((User)stubRepository.getElementList().get(0)).getMail();
         assertThat(emailOfUpdatedAccount).isEqualTo(emailExpected);
     }
 
     // TOOLS ----------------------------------------------------------------------
 
     public void setUpMySqlEventListener(Object[] columns, byte[] types) {
-        mySQLEventListener.setTableName("account");
+        mySQLEventListener.setTableName("user");
         Map<String, byte[]> columnsType = new HashMap<>();
-        columnsType.put("account", types);
+        columnsType.put("user", types);
         Map<String, Object[]> columnMap = new HashMap<>();
-        columnMap.put("account", columns);
+        columnMap.put("user", columns);
         mySQLEventListener.setColumnMap(columnMap);
         mySQLEventListener.setColumnsTypes(columnsType);
     }
 
-    public void setUpDomainClassAnalyzer(CrudRepository crudRepository, Account account) throws ReflectiveOperationException {
+    public void setUpDomainClassAnalyzer(CrudRepository crudRepository, User user) throws ReflectiveOperationException {
         Map<String, DomainClass> domainMap = new HashMap<>();
         List<String> tablesExpected = new ArrayList<>();
-        tablesExpected.add("account");
+        tablesExpected.add("user");
         DomainClass domainClass = new DomainClass();
-        domainClass.setDomainClass(Account.class);
+        domainClass.setDomainClass(User.class);
         domainClass.setCrudRepository(crudRepository);
-        domainMap.put("account", domainClass);
+        OneToOneRequester cartSQLRequester = new OneToOneRequester();
+        cartSQLRequester.setAssociatedField(User.class.getDeclaredField("cart"));
+        Map<String, SQLRequester> sqlRequesterMap = new HashMap<>();
+        sqlRequesterMap.put("cart", cartSQLRequester);
+        domainClass.setSqlRequesters(sqlRequesterMap);
+        domainMap.put("user", domainClass);
         when(domainClassAnalyzer.getDomainClassMap()).thenReturn(domainMap);
         when(domainClassAnalyzer.getTableExpected()).thenReturn(tablesExpected);
-        doReturn(account).when(domainClassAnalyzer).generateInstanceFromName("account");
+        doReturn(user).when(domainClassAnalyzer).generateInstanceFromName("user");
+
+
     }
 
 

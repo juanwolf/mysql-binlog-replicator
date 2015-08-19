@@ -4,11 +4,13 @@ import fr.juanwolf.mysqlbinlogreplicator.nested.SQLRelationship;
 import lombok.Data;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.lang.reflect.Field;
 
 /**
  * Created by juanwolf on 10/08/15.
@@ -22,6 +24,8 @@ public abstract class SQLRequester<T, N> {
     JdbcTemplate jdbcTemplate;
 
     Class<T> entryType;
+
+    Field associatedField;
 
     Class<N> foreignType;
 
@@ -46,7 +50,6 @@ public abstract class SQLRequester<T, N> {
     String primaryKeyForeignEntity;
 
     public SQLRequester() {
-
     }
 
     public SQLRequester(String entryTableName, String exitTableName, RowMapper<T> rowMapper,

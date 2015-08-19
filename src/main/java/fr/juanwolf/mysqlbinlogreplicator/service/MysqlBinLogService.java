@@ -24,6 +24,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -68,7 +69,7 @@ public class MysqlBinLogService {
 
     Map<String, Object[]> columnMap;
 
-    MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();;
+    MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
 
     @PostConstruct
     public void postConstruct() throws MalformedObjectNameException, NotCompliantMBeanException, InstanceAlreadyExistsException, MBeanRegistrationException {
@@ -111,6 +112,5 @@ public class MysqlBinLogService {
             log.debug("Columns found for {} : {}", tableName, Arrays.toString(columnsList.toArray()));
             columnMap.put(tableName, columnsList.toArray());
         }
-
     }
 }

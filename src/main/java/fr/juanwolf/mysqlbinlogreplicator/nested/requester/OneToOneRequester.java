@@ -21,17 +21,17 @@ public class OneToOneRequester<T, N> extends SQLRequester {
 
     @Override
     public N queryForeignEntity(String foreignKey, String primaryKey, String value) {
-        return (N) jdbcTemplate.queryForObject("SELECT FROM " + exitTableName
+        return (N) jdbcTemplate.queryForObject("SELECT * FROM " + exitTableName + " "
                 + "INNER JOIN " + super.entryTableName + " ON "
-                + super.entryTableName + "." + foreignKey + "=" + exitTableName + "." + primaryKey
-                + "WHERE " + primaryKey + "=" + value , foreignRowMapper);
+                + super.entryTableName + "." + foreignKey + "=" + exitTableName + "." + primaryKey + " "
+                + "WHERE " + exitTableName + "." + primaryKey + "=" + value , foreignRowMapper);
     }
 
     @Override
     public T reverseQueryEntity(String foreignKey, String primaryKey, String value) {
-        return (T) jdbcTemplate.queryForObject("SELECT FROM " + entryTableName
+        return (T) jdbcTemplate.queryForObject("SELECT * FROM " + entryTableName + " "
                 + "INNER JOIN " + super.entryTableName + " ON "
-                + exitTableName + "." + foreignKey + "=" + entryTableName + "." + primaryKey
+                + exitTableName + "." + foreignKey + "=" + entryTableName + "." + primaryKey + " "
                 + "WHERE " + primaryKey + "=" + value , rowMapper);
     }
 }

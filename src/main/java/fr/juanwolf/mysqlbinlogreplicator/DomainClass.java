@@ -4,6 +4,8 @@ import fr.juanwolf.mysqlbinlogreplicator.nested.requester.SQLRequester;
 import lombok.Data;
 import org.springframework.data.repository.CrudRepository;
 
+import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Map;
 
 /**

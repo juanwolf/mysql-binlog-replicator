@@ -21,6 +21,7 @@ import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.event.*;
 import fr.juanwolf.mysqlbinlogreplicator.DomainClass;
 import fr.juanwolf.mysqlbinlogreplicator.component.DomainClassAnalyzer;
+import fr.juanwolf.mysqlbinlogreplicator.nested.requester.SQLRequester;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,7 +31,9 @@ import org.springframework.data.repository.CrudRepository;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -121,18 +124,33 @@ public class MySQLEventListener implements BinaryLogClient.EventListener {
     Object getObjectFromRows(Serializable[] rows, String tableName) throws ReflectiveOperationException, ParseException {
         Object[] columns = columnMap.get(tableName);
         Object object = domainClassAnalyzer.generateInstanceFromName(tableName);
+        DomainClass domainClass = domainClassAnalyzer.getDomainClassMap().get(tableName);
+
+        // Setting up the list of foreign keys
+        Map<String, SQLRequester> foreignKeysSQLRequesterMap = new HashMap();
+        for (String nestedField: domainClass.getSqlRequesters().keySet()) {
+            SQLRequester sqlRequester = domainClass.getSqlRequesters().get(nestedField);
+            foreignKeysSQLRequesterMap.put(sqlRequester.getForeignKey(), sqlRequester);
+        }
+
         String debugLogObject = "";
         byte[] columnsType = columnsTypes.get(tableName);
         for (int i = 0; i < rows.length; i++) {
             if (rows[i] != null) {
                 try {
-                    Field field = object.getClass().getDeclaredField(columns[i].toString());
+                    Field field;
+                    if (foreignKeysSQLRequesterMap.keySet().contains(columns[i].toString())) {
+                        String columnsName = columns[i].toString();
+                        field = foreignKeysSQLRequesterMap.get(columnsName).getAssociatedField();
+                    } else {
+                        field = object.getClass().getDeclaredField(columns[i].toString());
+                    }
                     domainClassAnalyzer.instantiateField(object, field, rows[i].toString(), columnsType[i], tableName);
                     if (log.isDebugEnabled()) {
                         debugLogObject += columns[i] + "=" + rows[i].toString() + ", ";
                     }
                 } catch (NoSuchFieldException exception) {
-                    log.warn("No field found for {}", columns[i].toString(), exception);
+                    log.warn("No field found for {}", columns[i].toString());
                 }
             }
         }
