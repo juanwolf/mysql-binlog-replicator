@@ -81,13 +81,15 @@ public class NestedRowMapper implements RowMapper {
                 } else {
                     MysqlMapping mysqlMapping = (MysqlMapping) nestedObjectClass.getAnnotation(MysqlMapping.class);
                     DomainClass domainClass = domainClassAnalyzer.getDomainClassMap().get(mysqlMapping.table());
-                    SQLRequester sqlRequester = domainClass.getSqlRequesters().get(field.getName());
-                    NestedMapping nestedMapping = field.getAnnotation(NestedMapping.class);
-                    if (nestedMapping != null) {
-                        Object nestedTmpObject = sqlRequester.queryForeignEntity(sqlRequester.getForeignKey(),
-                                sqlRequester.getPrimaryKeyForeignEntity(),
-                                resultSet.getString(nestedMapping.foreignKey()));
-                        field.set(nestedObject, nestedTmpObject);
+                    if (domainClass != null) {
+                        SQLRequester sqlRequester = domainClass.getSqlRequesters().get(field.getName());
+                        NestedMapping nestedMapping = field.getAnnotation(NestedMapping.class);
+                        if (nestedMapping != null) {
+                            Object nestedTmpObject = sqlRequester.queryForeignEntity(sqlRequester.getForeignKey(),
+                                    sqlRequester.getPrimaryKeyForeignEntity(),
+                                    resultSet.getString(nestedMapping.foreignKey()));
+                            field.set(nestedObject, nestedTmpObject);
+                        }
                     }
                 }
                 field.setAccessible(false);
