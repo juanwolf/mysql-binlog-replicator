@@ -1,5 +1,11 @@
 package fr.juanwolf.mysqlbinlogreplicator.nested;
 
+import fr.juanwolf.mysqlbinlogreplicator.DomainClass;
+import fr.juanwolf.mysqlbinlogreplicator.annotations.MysqlMapping;
+import fr.juanwolf.mysqlbinlogreplicator.annotations.NestedMapping;
+import fr.juanwolf.mysqlbinlogreplicator.component.DomainClassAnalyzer;
+import fr.juanwolf.mysqlbinlogreplicator.nested.requester.SQLRequester;
+import fr.juanwolf.mysqlbinlogreplicator.service.MySQLEventListener;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.RowMapper;
 
@@ -8,6 +14,7 @@ import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.Date;
 
 /**
@@ -20,9 +27,12 @@ public class NestedRowMapper implements RowMapper {
 
     Field[] fields;
 
-    public NestedRowMapper(Class nestedObjectClass) {
+    DomainClassAnalyzer domainClassAnalyzer;
+
+    public NestedRowMapper(Class nestedObjectClass, DomainClassAnalyzer domainClassAnalyzer) {
         this.nestedObjectClass = nestedObjectClass;
         fields = this.nestedObjectClass.getDeclaredFields();
+        this.domainClassAnalyzer = domainClassAnalyzer;
     }
 
     @Override
@@ -32,15 +42,24 @@ public class NestedRowMapper implements RowMapper {
             Object nestedObject = nestedConstructor.newInstance();
             for (Field field : fields) {
                 field.setAccessible(true);
-                if (field.getType() == int.class) {
+                if (field.getType() == int.class || field.getType() == Integer.class) {
                     int intValue = resultSet.getInt(field.getName());
                     field.set(nestedObject, intValue);
                 } else if (field.getType() == String.class) {
                     String resultString = resultSet.getString(field.getName());
                     field.set(nestedObject, resultString);
-                } else if (field.getType() == Date.class) {
+                } else if (field.getType() == java.sql.Date.class || field.getType() == java.util.Date.class) {
                     Date dateValue = resultSet.getDate(field.getName());
-                    field.set(nestedObject, dateValue);
+                    if (field.getType() == java.sql.Date.class) {
+                        field.set(nestedObject, dateValue);
+                    } else {
+                        if (dateValue != null) {
+                            java.util.Date date = new Date(dateValue.getTime());
+                            field.set(nestedObject, date);
+                        } else {
+                            field.set(nestedObject, null);
+                        }
+                    }
                 } else if (field.getType() == long.class) {
                     long longValue = resultSet.getLong(field.getName());
                     field.set(nestedObject, longValue);
@@ -56,6 +75,20 @@ public class NestedRowMapper implements RowMapper {
                 } else if (field.getType() == double.class) {
                     double doubleValue = resultSet.getDouble(field.getName());
                     field.set(nestedObject, doubleValue);
+                } else if (field.getType() == java.sql.Timestamp.class) {
+                    Timestamp timestampValue = resultSet.getTimestamp(field.getName());
+                    field.set(nestedObject, timestampValue);
+                } else {
+                    MysqlMapping mysqlMapping = (MysqlMapping) nestedObjectClass.getAnnotation(MysqlMapping.class);
+                    DomainClass domainClass = domainClassAnalyzer.getDomainClassMap().get(mysqlMapping.table());
+                    SQLRequester sqlRequester = domainClass.getSqlRequesters().get(field.getName());
+                    NestedMapping nestedMapping = field.getAnnotation(NestedMapping.class);
+                    if (nestedMapping != null) {
+                        Object nestedTmpObject = sqlRequester.queryForeignEntity(sqlRequester.getForeignKey(),
+                                sqlRequester.getPrimaryKeyForeignEntity(),
+                                resultSet.getString(nestedMapping.foreignKey()));
+                        field.set(nestedObject, nestedTmpObject);
+                    }
                 }
                 field.setAccessible(false);
             }

@@ -31,9 +31,7 @@ import org.springframework.data.repository.CrudRepository;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -70,7 +68,7 @@ public class MySQLEventListener implements BinaryLogClient.EventListener {
     }
 
     public void actionOnEvent(Event event) throws Exception {
-        if (tableName != null && isTableConcern()) {
+        if (tableName != null && isMappingConcern()) {
             DomainClass domainClass = domainClassAnalyzer.getDomainClassMap().get(tableName);
             CrudRepository currentRepository = domainClass.getCrudRepository();
             Class currentClass = domainClass.getDomainClass();
@@ -90,6 +88,18 @@ public class MySQLEventListener implements BinaryLogClient.EventListener {
                 currentRepository.save(currentClassInstance);
             }
         }
+        if (tableName != null && isNestedConcern() && isCrudEvent(event.getHeader().getEventType())) {
+            DomainClass domainClass = domainClassAnalyzer.getNestedDomainClassMap().get(tableName);
+            for (SQLRequester sqlRequester : domainClass.getSqlRequesters().values()) {
+                if (sqlRequester.getExitTableName().equals(tableName)) {
+                    String primaryKeyValue = getPrimareyKeyFromEvent(event, sqlRequester, tableName);
+                    Object mainObject = sqlRequester.reverseQueryEntity(sqlRequester.getForeignKey(),
+                            sqlRequester.getPrimaryKeyForeignEntity(), primaryKeyValue);
+                    CrudRepository crudRepository = domainClass.getCrudRepository();
+                    crudRepository.save(mainObject);
+                }
+            }
+        }
         if (event.getHeader().getEventType() == EventType.TABLE_MAP) {
             TableMapEventData tableMapEventData = event.getData();
             tableName = tableMapEventData.getTable();
@@ -99,8 +109,16 @@ public class MySQLEventListener implements BinaryLogClient.EventListener {
         }
     }
 
-    boolean isTableConcern() {
-        return domainClassAnalyzer.getTableExpected().contains(tableName);
+    boolean isMappingConcern() {
+        return domainClassAnalyzer.getMappingTablesExpected().contains(tableName);
+    }
+
+    boolean isNestedConcern() {
+        return domainClassAnalyzer.getNestedTables().contains(tableName);
+    }
+
+    boolean isCrudEvent(EventType event) {
+        return EventType.isDelete(event) || EventType.isUpdate(event) || EventType.isWrite(event);
     }
 
     Object generateDomainObjectForUpdateEvent(Event event, String tableName) throws ReflectiveOperationException, ParseException {
@@ -156,6 +174,34 @@ public class MySQLEventListener implements BinaryLogClient.EventListener {
         }
         log.debug("Object generated :  {{}}", debugLogObject);
         return object;
+    }
+
+    String getPrimareyKeyFromEvent(Event event, SQLRequester sqlRequester, String tableName) {
+        Serializable[] rows = null;
+        if (EventType.isDelete(event.getHeader().getEventType())) {
+            DeleteRowsEventData data = event.getData();
+            rows = data.getRows().get(0);
+        } else if (EventType.isUpdate(event.getHeader().getEventType())){
+            UpdateRowsEventData data = event.getData();
+            rows = data.getRows().get(0).getValue();
+        } else if (EventType.isWrite(event.getHeader().getEventType())) {
+            WriteRowsEventData data = event.getData();
+            rows = data.getRows().get(0);
+        }
+        return getPrimaryKeyValueFromRows(rows, tableName, sqlRequester);
+    }
+
+    String getPrimaryKeyValueFromRows(Serializable[] rows, String tableName, SQLRequester sqlRequester) {
+        Object[] columns = columnMap.get(tableName);
+        for (int i = 0; i < rows.length; i++) {
+            if (rows[i] != null) {
+                if (sqlRequester.getPrimaryKeyForeignEntity().equals(columns[i])) {
+                    return rows[i].toString();
+                }
+            }
+
+        }
+        return null;
     }
 
 }

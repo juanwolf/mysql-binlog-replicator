@@ -29,9 +29,11 @@ public class OneToOneRequester<T, N> extends SQLRequester {
 
     @Override
     public T reverseQueryEntity(String foreignKey, String primaryKey, String value) {
-        return (T) jdbcTemplate.queryForObject("SELECT * FROM " + entryTableName + " "
-                + "INNER JOIN " + super.entryTableName + " ON "
-                + exitTableName + "." + foreignKey + "=" + entryTableName + "." + primaryKey + " "
-                + "WHERE " + primaryKey + "=" + value , rowMapper);
+        final String sql = "SELECT * FROM " + entryTableName + " "
+                + "INNER JOIN " + super.exitTableName + " ON "
+                + entryTableName + "." + foreignKey + "=" + exitTableName + "." + primaryKey + " "
+                + "WHERE " + exitTableName + "." + primaryKey + "=" + value;
+        T mainObject = (T) jdbcTemplate.queryForObject(sql, rowMapper);
+        return mainObject;
     }
 }

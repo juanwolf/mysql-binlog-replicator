@@ -65,17 +65,11 @@ public class User {
 //    @Field(index = FieldIndex.analyzed, type = FieldType.Boolean)
 //    boolean isAdmin;
 
-    @Getter
-    @Field(index = FieldIndex.analyzed, type = FieldType.String)
-    String dateString;
 
     @Getter
     @Field(index = FieldIndex.analyzed, type = FieldType.String)
     Timestamp creationTimestamp;
 
-    @Getter
-    @Field(index = FieldIndex.analyzed, type = FieldType.String)
-    Time creationTime;
 
     @Getter
     @NestedMapping(table = "cart", foreignKey="cart_id", sqlAssociaton=SQLRelationship.ONE_TO_ONE)

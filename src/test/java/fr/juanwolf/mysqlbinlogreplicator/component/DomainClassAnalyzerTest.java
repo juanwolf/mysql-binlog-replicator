@@ -106,7 +106,7 @@ public class DomainClassAnalyzerTest {
         // when
         //domainClassAnalyzer.postConstruct();
         // then
-        assertThat(domainClassAnalyzer.getTableExpected()).contains(valueExpected);
+        assertThat(domainClassAnalyzer.getMappingTablesExpected()).contains(valueExpected);
     }
 
     @Test
@@ -374,8 +374,8 @@ public class DomainClassAnalyzerTest {
     @Test
     public void postConstruct_should_set_the_DomainClass_nested_list_with_annotated_fields() throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, NoSuchFieldException {
         // Given
-        NestedRowMapper userRowMapper = new NestedRowMapper(User.class);
-        NestedRowMapper cartRowMapper = new NestedRowMapper(Cart.class);
+        NestedRowMapper userRowMapper = new NestedRowMapper(User.class, domainClassAnalyzer);
+        NestedRowMapper cartRowMapper = new NestedRowMapper(Cart.class, domainClassAnalyzer);
         OneToOneRequester<User, Cart> userToClassRequester = new OneToOneRequester<>("user", "cart",
                 userRowMapper , cartRowMapper);
         userToClassRequester.setJdbcTemplate(jdbcTemplate);
@@ -398,8 +398,8 @@ public class DomainClassAnalyzerTest {
         // When
         domainClassAnalyzer.postConstruct();
         // Then
-        assertThat(domainClassAnalyzer.getTableExpected()).contains(tableNameExpected);
-    } 
+        assertThat(domainClassAnalyzer.getNestedTables()).contains(tableNameExpected);
+    }
     
     @Test
     public void generateNestedField_should_create_an_instance_of_Cart() throws NoSuchFieldException {

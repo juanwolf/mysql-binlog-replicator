@@ -23,7 +23,6 @@ import com.github.shyiko.mysql.binlog.event.*;
 import com.github.shyiko.mysql.binlog.event.deserialization.ColumnType;
 import fr.juanwolf.mysqlbinlogreplicator.DomainClass;
 import fr.juanwolf.mysqlbinlogreplicator.component.DomainClassAnalyzer;
-import fr.juanwolf.mysqlbinlogreplicator.dao.UserRepository;
 import fr.juanwolf.mysqlbinlogreplicator.nested.requester.OneToOneRequester;
 import fr.juanwolf.mysqlbinlogreplicator.nested.requester.SQLRequester;
 import integrationTest.domain.User;
@@ -129,7 +128,8 @@ public class MySQLEventListenerTest {
         Event newtableMapEvent = new Event(tableMapEventHeader, tableMapEventData);
         mySQLEventListener.actionOnEvent(this.tableMapEvent);
         when(domainClass.getCrudRepository()).thenReturn(crudRepository);
-        when(domainClassAnalyzer.getTableExpected()).thenReturn(new ArrayList());
+        when(domainClassAnalyzer.getMappingTablesExpected()).thenReturn(new ArrayList());
+        when(domainClassAnalyzer.getNestedTables()).thenReturn(new ArrayList());
         // when
         mySQLEventListener.actionOnEvent(newtableMapEvent);
         // then
@@ -197,10 +197,10 @@ public class MySQLEventListenerTest {
         // Given
         List<String> tablesExpected = new ArrayList<>();
         tablesExpected.add("user");
-        when(domainClassAnalyzer.getTableExpected()).thenReturn(tablesExpected);
+        when(domainClassAnalyzer.getMappingTablesExpected()).thenReturn(tablesExpected);
         mySQLEventListener.setTableName("user");
         // When
-        boolean isTableConcern = mySQLEventListener.isTableConcern();
+        boolean isTableConcern = mySQLEventListener.isMappingConcern();
         // Then
         assertThat(isTableConcern).isTrue();
 
@@ -210,10 +210,10 @@ public class MySQLEventListenerTest {
     public void isTableConcern_should_return_false_if_the_table_is_not_contained_in_the_list() {
         // Given
         List<String> tablesExpected = new ArrayList<>();
-        when(domainClassAnalyzer.getTableExpected()).thenReturn(tablesExpected);
+        when(domainClassAnalyzer.getMappingTablesExpected()).thenReturn(tablesExpected);
         mySQLEventListener.setTableName("user");
         // When
-        boolean isTableConcern = mySQLEventListener.isTableConcern();
+        boolean isTableConcern = mySQLEventListener.isMappingConcern();
         // Then
         assertThat(isTableConcern).isFalse();
 
@@ -395,7 +395,7 @@ public class MySQLEventListenerTest {
         domainClass.setSqlRequesters(sqlRequesterMap);
         domainMap.put("user", domainClass);
         when(domainClassAnalyzer.getDomainClassMap()).thenReturn(domainMap);
-        when(domainClassAnalyzer.getTableExpected()).thenReturn(tablesExpected);
+        when(domainClassAnalyzer.getMappingTablesExpected()).thenReturn(tablesExpected);
         doReturn(user).when(domainClassAnalyzer).generateInstanceFromName("user");
 
 

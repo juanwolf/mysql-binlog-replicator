@@ -1,5 +1,7 @@
 package fr.juanwolf.mysqlbinlogreplicator.requester;
 
+import fr.juanwolf.mysqlbinlogreplicator.DomainClass;
+import fr.juanwolf.mysqlbinlogreplicator.component.DomainClassAnalyzer;
 import fr.juanwolf.mysqlbinlogreplicator.domain.User;
 import fr.juanwolf.mysqlbinlogreplicator.nested.NestedRowMapper;
 import org.junit.Before;
@@ -24,11 +26,14 @@ public class NestedRowMapperTest {
     @Mock
     ResultSet resultSet;
 
+    @Mock
+    DomainClassAnalyzer domainClassAnalyzer;
+
     NestedRowMapper nestedRowMapper;
 
     @Before
     public void setUp() {
-        nestedRowMapper = new NestedRowMapper(User.class);
+        nestedRowMapper = new NestedRowMapper(User.class, domainClassAnalyzer);
     }
 
     @Test
@@ -37,7 +42,7 @@ public class NestedRowMapperTest {
         class emptyClass {
 
         }
-        nestedRowMapper = new NestedRowMapper(emptyClass.class);
+        nestedRowMapper = new NestedRowMapper(emptyClass.class, domainClassAnalyzer);
         // When
         Object result =  nestedRowMapper.mapRow(null, 0);
         // Then
@@ -46,7 +51,7 @@ public class NestedRowMapperTest {
     }
 
     @Test
-    public void mapRow_should_return_an_integer_set_with_specific_value_in_resultSet() throws SQLException {
+    public void mapRow_should_return_a_string_set_with_specific_value_in_resultSet() throws SQLException {
         // Given
         String email = "HULK@shield.com";
         when(resultSet.getString("mail")).thenReturn(email);

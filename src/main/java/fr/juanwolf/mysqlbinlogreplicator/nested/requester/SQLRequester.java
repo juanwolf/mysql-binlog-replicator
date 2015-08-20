@@ -23,10 +23,19 @@ public abstract class SQLRequester<T, N> {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
+    /**
+     * Main class
+     */
     Class<T> entryType;
 
+    /**
+     * Field which link the entryType to the foreignType
+     */
     Field associatedField;
 
+    /**
+     * Foreign Class
+     */
     Class<N> foreignType;
 
     /**
@@ -41,12 +50,24 @@ public abstract class SQLRequester<T, N> {
 
     public SQLRelationship sqlRelationship;
 
+    /**
+     * Mapper for the foreign Class
+     */
     RowMapper<N> foreignRowMapper;
 
+    /**
+     * Mapper for the main class
+     */
     RowMapper<T> rowMapper;
 
+    /**
+     * Foreign key column name in the main class
+     */
     String foreignKey;
 
+    /**
+     * Primary key column name in the foreign class
+     */
     String primaryKeyForeignEntity;
 
     public SQLRequester() {

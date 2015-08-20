@@ -52,9 +52,23 @@ import java.util.*;
 @Component
 public class DomainClassAnalyzer {
 
+
+    /**
+     * Map containing every domainClass mapped by table names
+     */
     @Getter
     @Setter
     private Map<String, DomainClass> domainClassMap = new HashMap<>();
+
+
+    /**
+     * Map containing every domainClass mapped by nested table names
+     */
+    @Getter
+    @Setter
+    private Map<String, DomainClass> nestedDomainClassMap = new HashMap<>();
+
+
 
     @Autowired
     private ApplicationContext applicationContext;
@@ -64,7 +78,10 @@ public class DomainClassAnalyzer {
     private String scanMapping;
 
     @Getter
-    private List<String> tableExpected;
+    private List<String> mappingTablesExpected;
+
+    @Getter
+    private List<String> nestedTables;
 
     @Autowired
     private Environment environment;
@@ -81,7 +98,8 @@ public class DomainClassAnalyzer {
 
     @PostConstruct
     public void postConstruct() throws BeansException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        tableExpected = new ArrayList<>();
+        mappingTablesExpected = new ArrayList<>();
+        nestedTables = new ArrayList<>();
         Reflections reflections = new Reflections(scanMapping);
         Set<Class<?>> types = reflections.getTypesAnnotatedWith(MysqlMapping.class);
         final Iterator<Class<?>> iterator = types.iterator();
@@ -90,7 +108,7 @@ public class DomainClassAnalyzer {
             MysqlMapping mysqlMapping = (MysqlMapping) classDomain.getAnnotation(MysqlMapping.class);
             DomainClass domainClass = new DomainClass();
             domainClass.setDomainClass(classDomain);
-            tableExpected.add(mysqlMapping.table());
+            mappingTablesExpected.add(mysqlMapping.table());
             CrudRepository crudRepository = (CrudRepository) applicationContext.getBean(mysqlMapping.repository());
             domainClass.setCrudRepository(crudRepository);
             domainClass.setTable(mysqlMapping.table());
@@ -115,12 +133,13 @@ public class DomainClassAnalyzer {
                     }
                     sqlRequester.setForeignType(foreignType);
                     sqlRequester.setJdbcTemplate(jdbcTemplate);
-                    NestedRowMapper currentClassNestedRowMapper = new NestedRowMapper(classDomain);
-                    NestedRowMapper foreignClassNestedRowMapper = new NestedRowMapper(field.getType());
+                    NestedRowMapper currentClassNestedRowMapper = new NestedRowMapper(classDomain, this);
+                    NestedRowMapper foreignClassNestedRowMapper = new NestedRowMapper(field.getType(), this);
                     sqlRequester.setRowMapper(currentClassNestedRowMapper);
                     sqlRequester.setForeignRowMapper(foreignClassNestedRowMapper);
                     nestedClassesMap.put(field.getName(), sqlRequester);
-                    tableExpected.add(nestedMapping.table());
+                    nestedTables.add(nestedMapping.table());
+                    nestedDomainClassMap.put(nestedMapping.table(), domainClass);
                 }
             }
             domainClass.setSqlRequesters(nestedClassesMap);
@@ -185,8 +204,10 @@ public class DomainClassAnalyzer {
         } else if (field.getType() == String.class){
             field.set(object, value);
         } else {
-            Object nestedObject = generateNestedField(field, value, tablename);
-            field.set(object, nestedObject);
+            if (mappingTablesExpected.contains(tablename)) {
+                Object nestedObject = generateNestedField(field, value, tablename);
+                field.set(object, nestedObject);
+            }
         }
     }
 

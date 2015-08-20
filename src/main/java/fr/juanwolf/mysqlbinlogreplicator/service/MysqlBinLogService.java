@@ -24,7 +24,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -98,7 +97,8 @@ public class MysqlBinLogService {
 
     void getColumnName() {
         log.info("Retrieving columns informations from the database.");
-        final List<String> tableExpected = domainClassAnalyzer.getTableExpected();
+        List<String> tableExpected = new ArrayList<>(domainClassAnalyzer.getMappingTablesExpected());
+        tableExpected.addAll(domainClassAnalyzer.getNestedTables());
         columnMap = new HashMap<>();
         for (String tableName : tableExpected) {
             Map<String, String> paramMap = new HashMap<>();
