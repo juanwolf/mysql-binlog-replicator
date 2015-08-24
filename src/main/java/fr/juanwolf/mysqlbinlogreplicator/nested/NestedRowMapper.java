@@ -11,11 +11,15 @@ import org.springframework.jdbc.core.RowMapper;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by juanwolf on 11/08/15.
@@ -88,6 +92,82 @@ public class NestedRowMapper implements RowMapper {
                             Object nestedTmpObject = sqlRequester.queryForeignEntity(sqlRequester.getForeignKey(),
                                     sqlRequester.getPrimaryKeyForeignEntity(),
                                     resultSet.getString(nestedMapping.foreignKey()));
+                            field.set(nestedObject, nestedTmpObject);
+                        }
+                    }
+                }
+                field.setAccessible(false);
+            }
+            return nestedObject;
+        } catch (NoSuchMethodException e) {
+            log.error("No empty constructor for the class {}. Please, create one to make this object instantiable.",
+                    nestedObjectClass, e);
+        } catch (Exception exception) {
+            log.error("An exception occurred: ", exception);
+        }
+        return null;
+    }
+
+    public List<Object> getList(List<Map<String, Object>> mapList) {
+        List<Object> res = new ArrayList<>();
+        for(Map map : mapList) {
+            res.add(listEachMapRow(map));
+        }
+        return res;
+    }
+
+    public Object listEachMapRow(Map<String, Object> mapFields) {
+        try {
+            Constructor nestedConstructor = nestedObjectClass.getConstructor();
+            Object nestedObject = nestedConstructor.newInstance();
+            for (Field field : fields) {
+                field.setAccessible(true);
+                if (field.getType() == int.class || field.getType() == Integer.class) {
+                    int intValue = (int) mapFields.get(field.getName());
+                    field.set(nestedObject, intValue);
+                } else if (field.getType() == String.class) {
+                    String resultString = (String) mapFields.get(field.getName());
+                    field.set(nestedObject, resultString);
+                } else if (field.getType() == java.sql.Date.class || field.getType() == java.util.Date.class) {
+                    Date dateValue = (Date) mapFields.get(field.getName());
+                    if (field.getType() == java.sql.Date.class) {
+                        field.set(nestedObject, dateValue);
+                    } else {
+                        if (dateValue != null) {
+                            java.util.Date date = new Date(dateValue.getTime());
+                            field.set(nestedObject, date);
+                        } else {
+                            field.set(nestedObject, null);
+                        }
+                    }
+                } else if (field.getType() == long.class) {
+                    long longValue = (long) mapFields.get(field.getName());
+                    field.set(nestedObject, longValue);
+                } else if (field.getType() == boolean.class) {
+                    boolean booleanValue = (boolean) mapFields.get(field.getName());
+                    field.set(nestedObject, booleanValue);
+                } else if (field.getType() == Time.class) {
+                    Time timeValue = (Time) mapFields.get(field.getName());
+                    field.set(nestedObject, timeValue);
+                } else if (field.getType() == float.class) {
+                    float floatValue = (float) mapFields.get(field.getName());
+                    field.set(nestedObject, floatValue);
+                } else if (field.getType() == double.class) {
+                    double doubleValue = (double) mapFields.get(field.getName());
+                    field.set(nestedObject, doubleValue);
+                } else if (field.getType() == java.sql.Timestamp.class) {
+                    Timestamp timestampValue = (Timestamp) mapFields.get(field.getName());
+                    field.set(nestedObject, timestampValue);
+                } else {
+                    MysqlMapping mysqlMapping = (MysqlMapping) nestedObjectClass.getAnnotation(MysqlMapping.class);
+                    DomainClass domainClass = domainClassAnalyzer.getDomainClassMap().get(mysqlMapping.table());
+                    if (domainClass != null) {
+                        SQLRequester sqlRequester = domainClass.getSqlRequesters().get(field.getName());
+                        NestedMapping nestedMapping = field.getAnnotation(NestedMapping.class);
+                        if (nestedMapping != null) {
+                            Object nestedTmpObject = sqlRequester.queryForeignEntity(sqlRequester.getForeignKey(),
+                                    sqlRequester.getPrimaryKeyForeignEntity(),
+                                    mapFields.get(nestedMapping.foreignKey()).toString());
                             field.set(nestedObject, nestedTmpObject);
                         }
                     }

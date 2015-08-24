@@ -32,6 +32,7 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.text.ParseException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -96,7 +97,14 @@ public class MySQLEventListener implements BinaryLogClient.EventListener {
                     Object mainObject = sqlRequester.reverseQueryEntity(sqlRequester.getForeignKey(),
                             sqlRequester.getPrimaryKeyForeignEntity(), primaryKeyValue);
                     CrudRepository crudRepository = domainClass.getCrudRepository();
-                    crudRepository.save(mainObject);
+                    if (mainObject instanceof List) {
+                        List<Object> mainObjectList = (List<Object>) mainObject;
+                        for (Object object : mainObjectList) {
+                            crudRepository.save(object);
+                        }
+                    } else {
+                        crudRepository.save(mainObject);
+                    }
                 }
             }
         }

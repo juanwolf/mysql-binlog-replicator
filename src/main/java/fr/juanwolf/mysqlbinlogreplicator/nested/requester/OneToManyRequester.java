@@ -22,10 +22,10 @@ public class OneToManyRequester<T,N> extends SQLRequester {
     }
 
     @Override
-    public List<N> queryForeignEntity(String foreignKeyInForeignObject, String primaryKey, String value) {
+    public List<N> queryForeignEntity(String primaryKey, String foreignKey, String value) {
         final String query = "SELECT * FROM " + exitTableName + " "
                 + "INNER JOIN " + super.entryTableName + " ON "
-                + super.entryTableName + "." + primaryKey + "=" + exitTableName + "." + foreignKeyInForeignObject + " "
+                + super.entryTableName + "." + primaryKey + "=" + exitTableName + "." + foreignKey + " "
                 + "WHERE " + super.entryTableName + "." + primaryKey + "=" + value;
         return jdbcTemplate.queryForList(query, foreignType);
     }
@@ -34,7 +34,7 @@ public class OneToManyRequester<T,N> extends SQLRequester {
     public T reverseQueryEntity(String foreignKey, String primaryKey, String value) {
         return (T) jdbcTemplate.queryForObject("SELECT FROM " + entryTableName
                 + "INNER JOIN " + super.entryTableName + " ON "
-                + exitTableName + "." + foreignKey + "=" + entryTableName + "." + primaryKey
+                + exitTableName + "." + foreignKey + "=" + entryTableName + "." + primaryKey + " "
                 + "WHERE " + primaryKey + "=" + value , rowMapper);
     }
 }

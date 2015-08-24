@@ -44,8 +44,8 @@ public class User {
     Integer id;
 
     @Getter
-    @Field(type = FieldType.Long, index = FieldIndex.analyzed)
-    long identifier;
+    @Field(type = FieldType.Integer, index = FieldIndex.analyzed)
+    Integer identifier;
 
     @Getter
     @Setter
@@ -67,12 +67,7 @@ public class User {
 
 
     @Getter
-    @Field(index = FieldIndex.analyzed, type = FieldType.String)
-    Timestamp creationTimestamp;
-
-
-    @Getter
-    @NestedMapping(table = "cart", foreignKey="cart_id", sqlAssociaton=SQLRelationship.ONE_TO_ONE)
-    Cart cart;
+    @NestedMapping(table = "cart", foreignKey="cart_id", sqlAssociaton=SQLRelationship.MANY_TO_ONE)
+    Cart     cart;
 
 }
