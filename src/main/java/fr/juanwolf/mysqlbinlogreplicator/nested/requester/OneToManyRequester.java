@@ -1,9 +1,11 @@
 package fr.juanwolf.mysqlbinlogreplicator.nested.requester;
 
+import fr.juanwolf.mysqlbinlogreplicator.nested.NestedRowMapper;
 import fr.juanwolf.mysqlbinlogreplicator.nested.SQLRelationship;
 import org.springframework.jdbc.core.RowMapper;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by juanwolf on 10/08/15.
@@ -22,19 +24,22 @@ public class OneToManyRequester<T,N> extends SQLRequester {
     }
 
     @Override
-    public List<N> queryForeignEntity(String primaryKey, String foreignKey, String value) {
+    public List<N> queryForeignEntity(String foreignKey, String primaryKey, String value) {
         final String query = "SELECT * FROM " + exitTableName + " "
-                + "INNER JOIN " + super.entryTableName + " ON "
-                + super.entryTableName + "." + primaryKey + "=" + exitTableName + "." + foreignKey + " "
-                + "WHERE " + super.entryTableName + "." + primaryKey + "=" + value;
-        return jdbcTemplate.queryForList(query, foreignType);
+                + "WHERE " + super.exitTableName + "." + foreignKey + "=" + value;
+        List<Map<String, Object>> rows =  jdbcTemplate.queryForList(query);
+        NestedRowMapper nestedRowMapper = (NestedRowMapper) foreignRowMapper;
+        return (List<N>) nestedRowMapper.getList(rows);
     }
 
     @Override
     public T reverseQueryEntity(String foreignKey, String primaryKey, String value) {
-        return (T) jdbcTemplate.queryForObject("SELECT FROM " + entryTableName
-                + "INNER JOIN " + super.entryTableName + " ON "
-                + exitTableName + "." + foreignKey + "=" + entryTableName + "." + primaryKey + " "
-                + "WHERE " + primaryKey + "=" + value , rowMapper);
+        String idValue = jdbcTemplate.queryForObject("SELECT " + foreignKey + " FROM " + exitTableName + " "
+                + "WHERE " + exitTableName + "." + primaryKeyForeignEntity + "=" + value, String.class);
+        // The value string is equal to the id of the foreign object
+        String query = "SELECT * FROM " + entryTableName + " "
+                + "WHERE " + entryTableName + "." + primaryKey + "=" + idValue;
+        Object object = jdbcTemplate.queryForObject(query, rowMapper);
+        return (T) object;
     }
 }

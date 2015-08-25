@@ -134,7 +134,7 @@ public class DomainClassAnalyzer {
                     sqlRequester.setForeignType(foreignType);
                     sqlRequester.setJdbcTemplate(jdbcTemplate);
                     NestedRowMapper currentClassNestedRowMapper = new NestedRowMapper(classDomain, this);
-                    NestedRowMapper foreignClassNestedRowMapper = new NestedRowMapper(field.getType(), this);
+                    NestedRowMapper foreignClassNestedRowMapper = new NestedRowMapper(foreignType, this);
                     sqlRequester.setRowMapper(currentClassNestedRowMapper);
                     sqlRequester.setForeignRowMapper(foreignClassNestedRowMapper);
                     nestedClassesMap.put(field.getName(), sqlRequester);

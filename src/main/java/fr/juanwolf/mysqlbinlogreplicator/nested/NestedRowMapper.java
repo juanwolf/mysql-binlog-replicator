@@ -4,6 +4,7 @@ import fr.juanwolf.mysqlbinlogreplicator.DomainClass;
 import fr.juanwolf.mysqlbinlogreplicator.annotations.MysqlMapping;
 import fr.juanwolf.mysqlbinlogreplicator.annotations.NestedMapping;
 import fr.juanwolf.mysqlbinlogreplicator.component.DomainClassAnalyzer;
+import fr.juanwolf.mysqlbinlogreplicator.nested.requester.OneToManyRequester;
 import fr.juanwolf.mysqlbinlogreplicator.nested.requester.SQLRequester;
 import fr.juanwolf.mysqlbinlogreplicator.service.MySQLEventListener;
 import lombok.extern.slf4j.Slf4j;
@@ -89,10 +90,17 @@ public class NestedRowMapper implements RowMapper {
                         SQLRequester sqlRequester = domainClass.getSqlRequesters().get(field.getName());
                         NestedMapping nestedMapping = field.getAnnotation(NestedMapping.class);
                         if (nestedMapping != null) {
-                            Object nestedTmpObject = sqlRequester.queryForeignEntity(sqlRequester.getForeignKey(),
-                                    sqlRequester.getPrimaryKeyForeignEntity(),
-                                    resultSet.getString(nestedMapping.foreignKey()));
-                            field.set(nestedObject, nestedTmpObject);
+                            if (sqlRequester instanceof OneToManyRequester) {
+                                Object nestedTmpObject = sqlRequester.queryForeignEntity(sqlRequester.getForeignKey(),
+                                        sqlRequester.getPrimaryKeyForeignEntity(),
+                                        resultSet.getString(nestedMapping.primaryKey()));
+                                field.set(nestedObject, nestedTmpObject);
+                            } else {
+                                Object nestedTmpObject = sqlRequester.queryForeignEntity(sqlRequester.getForeignKey(),
+                                        sqlRequester.getPrimaryKeyForeignEntity(),
+                                        resultSet.getString(nestedMapping.foreignKey()));
+                                field.set(nestedObject, nestedTmpObject);
+                            }
                         }
                     }
                 }
@@ -118,6 +126,7 @@ public class NestedRowMapper implements RowMapper {
 
     public Object listEachMapRow(Map<String, Object> mapFields) {
         try {
+
             Constructor nestedConstructor = nestedObjectClass.getConstructor();
             Object nestedObject = nestedConstructor.newInstance();
             for (Field field : fields) {

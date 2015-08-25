@@ -19,8 +19,11 @@ package fr.juanwolf.mysqlbinlogreplicator.service;
 
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.event.*;
+import com.github.shyiko.mysql.binlog.event.deserialization.ColumnType;
 import fr.juanwolf.mysqlbinlogreplicator.DomainClass;
+import fr.juanwolf.mysqlbinlogreplicator.annotations.NestedMapping;
 import fr.juanwolf.mysqlbinlogreplicator.component.DomainClassAnalyzer;
+import fr.juanwolf.mysqlbinlogreplicator.nested.SQLRelationship;
 import fr.juanwolf.mysqlbinlogreplicator.nested.requester.SQLRequester;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -93,7 +96,7 @@ public class MySQLEventListener implements BinaryLogClient.EventListener {
             DomainClass domainClass = domainClassAnalyzer.getNestedDomainClassMap().get(tableName);
             for (SQLRequester sqlRequester : domainClass.getSqlRequesters().values()) {
                 if (sqlRequester.getExitTableName().equals(tableName)) {
-                    String primaryKeyValue = getPrimareyKeyFromEvent(event, sqlRequester, tableName);
+                    String primaryKeyValue = getPrimaryKeyFromEvent(event, sqlRequester, tableName);
                     Object mainObject = sqlRequester.reverseQueryEntity(sqlRequester.getForeignKey(),
                             sqlRequester.getPrimaryKeyForeignEntity(), primaryKeyValue);
                     CrudRepository crudRepository = domainClass.getCrudRepository();
@@ -180,11 +183,29 @@ public class MySQLEventListener implements BinaryLogClient.EventListener {
                 }
             }
         }
+        for (Field field : object.getClass().getDeclaredFields()) {
+            field.setAccessible(true);
+            Object fieldValue = field.get(object);
+            if (fieldValue == null) {
+                if (field.isAnnotationPresent(NestedMapping.class)) {
+                    NestedMapping nestedMapping = field.getAnnotation(NestedMapping.class);
+                    if (nestedMapping.sqlAssociaton() == SQLRelationship.ONE_TO_MANY) {
+                        Field primaryKeyField = object.getClass().getField(nestedMapping.primaryKey());
+                        primaryKeyField.setAccessible(true);
+                        Object primaryKeyValue = primaryKeyField.get(object);
+                        domainClassAnalyzer.instantiateField(object, field, primaryKeyValue.toString(),
+                                ColumnType.STRING.getCode(), tableName);
+                        primaryKeyField.setAccessible(false);
+                    }
+                }
+            }
+            field.setAccessible(false);
+        }
         log.debug("Object generated :  {{}}", debugLogObject);
         return object;
     }
 
-    String getPrimareyKeyFromEvent(Event event, SQLRequester sqlRequester, String tableName) {
+    String getPrimaryKeyFromEvent(Event event, SQLRequester sqlRequester, String tableName) {
         Serializable[] rows = null;
         if (EventType.isDelete(event.getHeader().getEventType())) {
             DeleteRowsEventData data = event.getData();
