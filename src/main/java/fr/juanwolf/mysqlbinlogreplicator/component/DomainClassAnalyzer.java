@@ -18,7 +18,11 @@
 package fr.juanwolf.mysqlbinlogreplicator.component;
 
 import com.github.shyiko.mysql.binlog.event.deserialization.ColumnType;
+import fr.juanwolf.mysqlbinlogreplicator.DomainClass;
 import fr.juanwolf.mysqlbinlogreplicator.annotations.MysqlMapping;
+import fr.juanwolf.mysqlbinlogreplicator.annotations.NestedMapping;
+import fr.juanwolf.mysqlbinlogreplicator.nested.NestedRowMapper;
+import fr.juanwolf.mysqlbinlogreplicator.nested.requester.SQLRequester;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -29,11 +33,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DateFormat;
@@ -45,12 +52,23 @@ import java.util.*;
 @Component
 public class DomainClassAnalyzer {
 
+
+    /**
+     * Map containing every domainClass mapped by table names
+     */
     @Getter
     @Setter
-    private Map<String, Class> domainNameMap = new HashMap<>();
+    private Map<String, DomainClass> domainClassMap = new HashMap<>();
 
+
+    /**
+     * Map containing every domainClass mapped by nested table names
+     */
     @Getter
-    private Map<String, CrudRepository> repositoryMap = new HashMap<>();
+    @Setter
+    private Map<String, DomainClass> nestedDomainClassMap = new HashMap<>();
+
+
 
     @Autowired
     private ApplicationContext applicationContext;
@@ -60,10 +78,16 @@ public class DomainClassAnalyzer {
     private String scanMapping;
 
     @Getter
-    private List<String> tableExpected;
+    private List<String> mappingTablesExpected;
+
+    @Getter
+    private List<String> nestedTables;
 
     @Autowired
     private Environment environment;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     public static final DateFormat BINLOG_DATETIME_FORMATTER = new SimpleDateFormat("EEE MMM dd hh:mm:ss z yyyy", Locale.UK);
 
@@ -73,18 +97,53 @@ public class DomainClassAnalyzer {
     public DateFormat binlogOutputDateFormatter;
 
     @PostConstruct
-    public void postConstruct() throws BeansException {
-        tableExpected = new ArrayList<>();
+    public void postConstruct() throws BeansException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        mappingTablesExpected = new ArrayList<>();
+        nestedTables = new ArrayList<>();
         Reflections reflections = new Reflections(scanMapping);
         Set<Class<?>> types = reflections.getTypesAnnotatedWith(MysqlMapping.class);
         final Iterator<Class<?>> iterator = types.iterator();
         while (iterator.hasNext()) {
             Class classDomain = iterator.next();
             MysqlMapping mysqlMapping = (MysqlMapping) classDomain.getAnnotation(MysqlMapping.class);
-            tableExpected.add(mysqlMapping.table());
-            domainNameMap.put(mysqlMapping.table(), classDomain);
+            DomainClass domainClass = new DomainClass();
+            domainClass.setDomainClass(classDomain);
+            mappingTablesExpected.add(mysqlMapping.table());
             CrudRepository crudRepository = (CrudRepository) applicationContext.getBean(mysqlMapping.repository());
-            repositoryMap.put(mysqlMapping.table(), crudRepository);
+            domainClass.setCrudRepository(crudRepository);
+            domainClass.setTable(mysqlMapping.table());
+            Map<String, SQLRequester> nestedClassesMap = new HashMap<>();
+            for (Field field : classDomain.getDeclaredFields()) {
+                NestedMapping nestedMapping = field.getAnnotation(NestedMapping.class);
+                if (nestedMapping != null) {
+                    Class sqlRequesterClass = nestedMapping.sqlAssociaton().getRequesterClass();
+                    Constructor sqlRequesterConstructor = sqlRequesterClass.getConstructor();
+                    SQLRequester sqlRequester = (SQLRequester) sqlRequesterConstructor.newInstance();
+                    sqlRequester.setEntryTableName(mysqlMapping.table());
+                    sqlRequester.setExitTableName(nestedMapping.table());
+                    sqlRequester.setForeignKey(nestedMapping.foreignKey());
+                    sqlRequester.setPrimaryKeyForeignEntity(nestedMapping.primaryKey());
+                    sqlRequester.setEntryType(classDomain);
+                    sqlRequester.setAssociatedField(field);
+                    Class foreignType = field.getType();
+                    if (field.getGenericType() instanceof ParameterizedType) {
+                        ParameterizedType genericType = (ParameterizedType) field.getGenericType();
+                        Class properType = (Class) genericType.getActualTypeArguments()[0];
+                        foreignType = properType;
+                    }
+                    sqlRequester.setForeignType(foreignType);
+                    sqlRequester.setJdbcTemplate(jdbcTemplate);
+                    NestedRowMapper currentClassNestedRowMapper = new NestedRowMapper(classDomain, this);
+                    NestedRowMapper foreignClassNestedRowMapper = new NestedRowMapper(foreignType, this);
+                    sqlRequester.setRowMapper(currentClassNestedRowMapper);
+                    sqlRequester.setForeignRowMapper(foreignClassNestedRowMapper);
+                    nestedClassesMap.put(field.getName(), sqlRequester);
+                    nestedTables.add(nestedMapping.table());
+                    nestedDomainClassMap.put(nestedMapping.table(), domainClass);
+                }
+            }
+            domainClass.setSqlRequesters(nestedClassesMap);
+            domainClassMap.put(domainClass.getTable(), domainClass);
         }
         if (environment.getProperty("date.output") != null) {
             binlogOutputDateFormatter = new SimpleDateFormat(environment.getProperty("date.output"));
@@ -92,11 +151,12 @@ public class DomainClassAnalyzer {
     }
 
     public Object generateInstanceFromName(String name) throws ReflectiveOperationException {
-        Class classAsked = domainNameMap.get(name);
-        if (classAsked == null) {
+        DomainClass domainClass = domainClassMap.get(name);
+        if (domainClass == null) {
             log.error("Class with name {} not found.", name);
             throw new ReflectiveOperationException();
         }
+        Class classAsked = domainClassMap.get(name).getDomainClass();
         try {
             Constructor classConstructor = classAsked.getConstructor();
             return classConstructor.newInstance();
@@ -108,7 +168,7 @@ public class DomainClassAnalyzer {
         return null;
     }
 
-    public void instantiateField(Object object, Field field, Object value, int columnType) throws ParseException, IllegalAccessException {
+    public void instantiateField(Object object, Field field, Object value, int columnType, String tablename) throws ParseException, IllegalAccessException {
         field.setAccessible(true);
         if (columnType == ColumnType.DATETIME.getCode()  && field.getType() == Date.class) {
             Date date = BINLOG_DATETIME_FORMATTER.parse((String) value);
@@ -141,13 +201,24 @@ public class DomainClassAnalyzer {
             field.set(object, Integer.parseInt((String) value));
         } else if (columnType == ColumnType.FLOAT.getCode() && field.getType() == float.class) {
             field.set(object, Float.parseFloat((String) value));
-        } else {
+        } else if (field.getType() == String.class){
             field.set(object, value);
+        } else {
+            if (mappingTablesExpected.contains(tablename)) {
+                Object nestedObject = generateNestedField(field, value, tablename);
+                field.set(object, nestedObject);
+            }
         }
     }
 
-    // TOOLS
+    public Object generateNestedField(Field field, Object value, String tablename) {
+        DomainClass currentDomainClass = domainClassMap.get(tablename);
+        SQLRequester sqlRequester = currentDomainClass.getSqlRequesters().get(field.getName());
+        return sqlRequester.queryForeignEntity(sqlRequester.getForeignKey(),
+                sqlRequester.getPrimaryKeyForeignEntity(), (String) value);
+    }
 
+    // TOOLS
     static boolean isInteger(Field field) {
         return field.getType() == Integer.class || field.getType() == int.class;
     }

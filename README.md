@@ -40,7 +40,7 @@ Create a mysql-binlog-replicator.properties with the mysql configuration :
     mysql.host=localhost
     mysql.port=3306
     # Tables that you want to track changes separated by commas
-    mysql.schema=account
+    mysql.schema=user
     # The package where you keep all your pojos
     mysql.scanmapping=fr.juanwolf.mysqlbinlogreplicator.domain
     # The user with replication access
@@ -65,7 +65,7 @@ Make sure you're using the @MysqlMapping annotation. It will bind the pojo to a 
 
 For example a class for accounts would look like :
  
-    @MysqlMapping(table = "account", repository="accountRepository")
+    @MysqlMapping(table = "user", repository="userRepository")
     public class Account {
         @Id
         String id;
@@ -129,11 +129,11 @@ If you need any other mapping, please open issue.
 
 #### ElasticSearch ####
 
-Add to your pojos annotations needed by the ElasticSearch Repository, example for the account class above :
+Add to your pojos annotations needed by the ElasticSearch Repository, example for the user class above :
 
-    @Document(indexName = "account")
-    @Mapping(mappingPath = "account")
-    @MysqlMapping(table = "account", repository="accountRepository")
+    @Document(indexName = "user")
+    @Mapping(mappingPath = "user")
+    @MysqlMapping(table = "user", repository="userRepository")
     public class Account {
         ...
     }

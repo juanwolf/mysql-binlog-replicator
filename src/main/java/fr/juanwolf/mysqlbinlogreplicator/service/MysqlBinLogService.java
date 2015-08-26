@@ -68,7 +68,7 @@ public class MysqlBinLogService {
 
     Map<String, Object[]> columnMap;
 
-    MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();;
+    MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
 
     @PostConstruct
     public void postConstruct() throws MalformedObjectNameException, NotCompliantMBeanException, InstanceAlreadyExistsException, MBeanRegistrationException {
@@ -97,7 +97,8 @@ public class MysqlBinLogService {
 
     void getColumnName() {
         log.info("Retrieving columns informations from the database.");
-        final List<String> tableExpected = domainClassAnalyzer.getTableExpected();
+        List<String> tableExpected = new ArrayList<>(domainClassAnalyzer.getMappingTablesExpected());
+        tableExpected.addAll(domainClassAnalyzer.getNestedTables());
         columnMap = new HashMap<>();
         for (String tableName : tableExpected) {
             Map<String, String> paramMap = new HashMap<>();
@@ -111,6 +112,5 @@ public class MysqlBinLogService {
             log.debug("Columns found for {} : {}", tableName, Arrays.toString(columnsList.toArray()));
             columnMap.put(tableName, columnsList.toArray());
         }
-
     }
 }
