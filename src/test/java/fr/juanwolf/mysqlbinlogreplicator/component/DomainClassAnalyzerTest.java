@@ -321,14 +321,13 @@ public class DomainClassAnalyzerTest {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.UK);
         simpleDateFormat.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
         domainClassAnalyzer.postConstruct();
-        // When
         User user = (User) domainClassAnalyzer.generateInstanceFromName("user");
         // When
         domainClassAnalyzer.instantiateField(user, user.getClass().getDeclaredField("dateString"), date, ColumnType.DATETIME.getCode(), "user");
 
         // Then
-        //assertThat(BINLOG_DATETIME_FORMATTER.parse(account.getDateString())).isEqualTo(dateExpected);
-        assertThat(user.getDateString()).isEqualTo(date);
+        assertThat(BINLOG_DATETIME_FORMATTER.parse(user.getDateString())).isEqualTo(dateExpected);
+        //assertThat(user.getDateString()).isEqualTo(date);
     }
 
     @Test
