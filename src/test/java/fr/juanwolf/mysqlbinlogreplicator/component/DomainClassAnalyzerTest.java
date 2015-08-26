@@ -415,19 +415,19 @@ public class DomainClassAnalyzerTest {
         assertThat(cart).isEqualToComparingFieldByField(cartExpected);
     }
 
-    @Test
-    public void generateNestedField_should_create_an_instance_of_list_of_bills() throws NoSuchFieldException {
-        // Given
-        User user = new User();
-        String requestExpected = "SELECT * FROM bill INNER JOIN user ON user.id=bill.pk_user WHERE user.id=1";
-        Field field  = user.getClass().getDeclaredField("bills");
-        List<Bill> billList = new ArrayList<>();
-        billList.add(new Bill());
-        when(jdbcTemplate.queryForList(requestExpected, Bill.class)).thenReturn(billList);
-        // When
-        List<Bill> bills = (List<Bill>) domainClassAnalyzer.generateNestedField(field, "1", "user");
-        // Then
-         assertThat(bills).isEqualTo(billList);
-    }
+//    @Test
+//    public void generateNestedField_should_create_an_instance_of_list_of_bills() throws NoSuchFieldException {
+//        // Given
+//        User user = new User();
+//        String requestExpected = "SELECT * FROM bill INNER JOIN user ON user.id=bill.pk_user WHERE user.id=1";
+//        Field field  = user.getClass().getDeclaredField("bills");
+//        List<Map<String, Object>> billMapList = new ArrayMap<>();
+//        Map<String, Object>
+//        when(jdbcTemplate.queryForList(requestExpected, Bill.class)).thenReturn(billList);
+//        // When
+//        List<Bill> bills = (List<Bill>) domainClassAnalyzer.generateNestedField(field, "1", "user");
+//        // Then
+//         assertThat(bills).isEqualTo(billList);
+//    }
 
 }
