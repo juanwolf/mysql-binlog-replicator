@@ -16,35 +16,36 @@
 */
 
 
-package fr.juanwolf.mysqlbinlogreplicator.domain;
+package integrationTest.domain;
 
 import fr.juanwolf.mysqlbinlogreplicator.annotations.MysqlMapping;
+import fr.juanwolf.mysqlbinlogreplicator.annotations.NestedMapping;
+import fr.juanwolf.mysqlbinlogreplicator.nested.SQLRelationship;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.experimental.Accessors;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.*;
 
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by juanwolf on 17/07/15.
  */
-@Document(indexName = "account")
-@Mapping(mappingPath = "account")
-@MysqlMapping(table = "account", repository="accountRepository")
-public class Account {
+@Document(indexName = "user")
+@Mapping(mappingPath = "user")
+@MysqlMapping(table = "user", repository="userRepository")
+public class User {
     @Id
     @Setter
     @Getter
-    int id;
+    Integer id;
 
     @Getter
-    @Field(type = FieldType.Long, index = FieldIndex.analyzed)
-    long identifier;
+    @Field(type = FieldType.Integer, index = FieldIndex.analyzed)
+    Integer identifier;
 
     @Getter
     @Setter
@@ -59,20 +60,14 @@ public class Account {
     @Field(index = FieldIndex.analyzed, type = FieldType.Float)
     float cartAmount;
 
-    @Getter
-    @Setter
-    @Field(index = FieldIndex.analyzed, type = FieldType.Boolean)
-    boolean isAdmin;
+//    @Getter
+//    @Setter
+//    @Field(index = FieldIndex.analyzed, type = FieldType.Boolean)
+//    boolean isAdmin;
+
 
     @Getter
-    @Field(index = FieldIndex.analyzed, type = FieldType.String)
-    String dateString;
+    @NestedMapping(table = "cart", foreignKey="cart_id", sqlAssociaton=SQLRelationship.MANY_TO_ONE)
+    Cart     cart;
 
-    @Getter
-    @Field(index = FieldIndex.analyzed, type = FieldType.String)
-    Timestamp creationTimestamp;
-
-    @Getter
-    @Field(index = FieldIndex.analyzed, type = FieldType.String)
-    Time creationTime;
 }

@@ -84,7 +84,7 @@ public class MysqlBinLogServiceTest {
         // Given
         List<String> tableExpectedList = new ArrayList<>();
         tableExpectedList.add("account");
-        when(domainClassAnalyzer.getTableExpected()).thenReturn(tableExpectedList);
+        when(domainClassAnalyzer.getMappingTablesExpected()).thenReturn(tableExpectedList);
         List<Map<String, Object>> columnsMap = new ArrayList<>();
         Map<String, Object> columnMap = new HashMap<>();
         columnMap.put("COLUMN_NAME", "column_name");
