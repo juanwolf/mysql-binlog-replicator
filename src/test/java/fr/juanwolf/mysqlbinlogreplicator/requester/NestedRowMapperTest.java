@@ -33,7 +33,7 @@ public class NestedRowMapperTest {
 
     @Before
     public void setUp() {
-        nestedRowMapper = new NestedRowMapper(User.class, domainClassAnalyzer);
+        nestedRowMapper = new NestedRowMapper(User.class, domainClassAnalyzer, "user");
     }
 
     @Test
@@ -42,7 +42,7 @@ public class NestedRowMapperTest {
         class emptyClass {
 
         }
-        nestedRowMapper = new NestedRowMapper(emptyClass.class, domainClassAnalyzer);
+        nestedRowMapper = new NestedRowMapper(emptyClass.class, domainClassAnalyzer, "empty");
         // When
         Object result =  nestedRowMapper.mapRow(null, 0);
         // Then

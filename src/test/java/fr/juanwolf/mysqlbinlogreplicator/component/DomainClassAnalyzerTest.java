@@ -377,8 +377,8 @@ public class DomainClassAnalyzerTest {
     @Test
     public void postConstruct_should_set_the_DomainClass_nested_list_with_annotated_fields() throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, NoSuchFieldException {
         // Given
-        NestedRowMapper userRowMapper = new NestedRowMapper(User.class, domainClassAnalyzer);
-        NestedRowMapper cartRowMapper = new NestedRowMapper(Cart.class, domainClassAnalyzer);
+        NestedRowMapper userRowMapper = new NestedRowMapper(User.class, domainClassAnalyzer, "user");
+        NestedRowMapper cartRowMapper = new NestedRowMapper(Cart.class, domainClassAnalyzer, "cart");
         OneToOneRequester<User, Cart> userToClassRequester = new OneToOneRequester<>("user", "cart",
                 userRowMapper , cartRowMapper);
         userToClassRequester.setJdbcTemplate(jdbcTemplate);

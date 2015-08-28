@@ -26,7 +26,7 @@ public class Cart {
     @Field(type = FieldType.Float, index = FieldIndex.analyzed)
     public float amount;
 
-//    @NestedMapping(primaryKey = "id", foreignKey = "cart_id", sqlAssociaton=SQLRelationship.ONE_TO_MANY, table="user")
-//    @Field(type = FieldType.Nested, index=FieldIndex.analyzed)
-//    List<User> users;
+    @NestedMapping(primaryKey = "id", foreignKey = "cart_id", sqlAssociaton=SQLRelationship.ONE_TO_MANY, table="user")
+    @Field(type = FieldType.Nested, index=FieldIndex.analyzed)
+    List<User> users;
 }

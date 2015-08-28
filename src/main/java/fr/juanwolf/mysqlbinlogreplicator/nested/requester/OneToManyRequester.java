@@ -25,8 +25,8 @@ public class OneToManyRequester<T,N> extends SQLRequester {
 
     @Override
     public List<N> queryForeignEntity(String foreignKey, String primaryKey, String value) {
-        final String query = "SELECT * FROM " + exitTableName + " "
-                + "WHERE " + super.exitTableName + "." + foreignKey + "=" + value;
+        final String query = "SELECT * FROM " + getForeignTablePath() + " "
+                + "WHERE " + super.getForeignTablePath() + "." + foreignKey + "=" + value;
         List<Map<String, Object>> rows =  jdbcTemplate.queryForList(query);
         NestedRowMapper nestedRowMapper = (NestedRowMapper) foreignRowMapper;
         return (List<N>) nestedRowMapper.getList(rows);
@@ -34,11 +34,11 @@ public class OneToManyRequester<T,N> extends SQLRequester {
 
     @Override
     public T reverseQueryEntity(String foreignKey, String primaryKey, String value) {
-        String idValue = jdbcTemplate.queryForObject("SELECT " + foreignKey + " FROM " + exitTableName + " "
-                + "WHERE " + exitTableName + "." + primaryKeyForeignEntity + "=" + value, String.class);
+        String idValue = jdbcTemplate.queryForObject("SELECT " + foreignKey + " FROM " + getForeignTablePath() + " "
+                + "WHERE " + getForeignTablePath() + "." + primaryKeyForeignEntity + "=" + value, String.class);
         // The value string is equal to the id of the foreign object
-        String query = "SELECT * FROM " + entryTableName + " "
-                + "WHERE " + entryTableName + "." + primaryKey + "=" + idValue;
+        String query = "SELECT * FROM " + getEntryTablePath() + " "
+                + "WHERE " + getEntryTablePath() + "." + primaryKey + "=" + idValue;
         Object object = jdbcTemplate.queryForObject(query, rowMapper);
         return (T) object;
     }

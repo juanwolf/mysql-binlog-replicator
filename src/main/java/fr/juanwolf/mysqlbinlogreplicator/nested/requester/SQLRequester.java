@@ -3,6 +3,7 @@ package fr.juanwolf.mysqlbinlogreplicator.nested.requester;
 import fr.juanwolf.mysqlbinlogreplicator.nested.SQLRelationship;
 import lombok.Data;
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -22,6 +23,9 @@ public abstract class SQLRequester<T, N> {
     @Getter
     @Autowired
     JdbcTemplate jdbcTemplate;
+
+    @Setter
+    String databaseName;
 
     /**
      * Main class
@@ -79,6 +83,22 @@ public abstract class SQLRequester<T, N> {
         this.exitTableName = exitTableName;
         this.rowMapper = rowMapper;
         this.foreignRowMapper = foreignRowMapper;
+    }
+
+    public String getEntryTablePath() {
+        return databaseName + "." + entryTableName;
+    }
+
+    public String getForeignTablePath() {
+        return databaseName + "." + exitTableName;
+    }
+
+    public String getForeignKeyPath(String tablePath) {
+        return tablePath + "." + foreignKey;
+    }
+
+    public String getPrimaryKey(String tablePath) {
+        return tablePath + "." + primaryKeyForeignEntity;
     }
 
     public abstract N queryForeignEntity(String foreignKey, String primaryKey, String value);

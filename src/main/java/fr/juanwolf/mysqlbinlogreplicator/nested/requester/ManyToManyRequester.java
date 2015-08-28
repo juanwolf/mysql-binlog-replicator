@@ -22,17 +22,18 @@ public class ManyToManyRequester<T, N> extends SQLRequester {
 
     @Override
     public List<N> queryForeignEntity(String foreignKey, String primaryKey, String value) {
-        return  (List<N>) jdbcTemplate.queryForList("SELECT FROM " + exitTableName
-                + "INNER JOIN " + super.entryTableName + " ON "
-                + super.entryTableName + "." + foreignKey + "=" + exitTableName + "." + primaryKey
+        return  (List<N>) jdbcTemplate.queryForList("SELECT" +
+                " * FROM " + getForeignTablePath()
+                + "INNER JOIN " + super.getEntryTablePath() + " ON "
+                + super.getEntryTablePath() + "." + foreignKey + "=" + getForeignTablePath() + "." + primaryKey
                 + "WHERE " + primaryKey + "=" + value, foreignRowMapper);
     }
 
     @Override
     public List<T> reverseQueryEntity(String foreignKey, String primaryKey, String value) {
-        return (List<T>) jdbcTemplate.queryForList("SELECT FROM " + entryTableName
-                + "INNER JOIN " + super.entryTableName + " ON "
-                + exitTableName + "." + foreignKey + "=" + entryTableName + "." + primaryKey
+        return (List<T>) jdbcTemplate.queryForList("SELECT * FROM " + getEntryTablePath()
+                + "INNER JOIN " + super.getEntryTablePath() + " ON "
+                + getForeignTablePath() + "." + foreignKey + "=" + getEntryTablePath() + "." + primaryKey
                 + "WHERE " + primaryKey + "=" + value , rowMapper);
     }
 

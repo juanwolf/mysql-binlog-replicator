@@ -25,15 +25,15 @@ public class ManyToOneRequester<T, N> extends SQLRequester {
 
     @Override
     public N queryForeignEntity(String foreignKey, String primaryKey, String value) {
-        String query = "SELECT * FROM " + exitTableName + " "
-                + "WHERE " + exitTableName + "." + primaryKey + "=" + value;
+        String query = "SELECT * FROM " + getForeignTablePath() + " "
+                + "WHERE " + getForeignTablePath() + "." + primaryKey + "=" + value;
         return  (N) jdbcTemplate.queryForObject(query, foreignRowMapper);
     }
 
     @Override
     public List<T> reverseQueryEntity(String foreignKey, String primaryKey, String value) {
-        String sql = "SELECT * FROM " + entryTableName + " "
-                + "WHERE " + entryTableName + "." + foreignKey + "=" + value;
+        String sql = "SELECT * FROM " + getEntryTablePath() + " "
+                + "WHERE " + getEntryTablePath() + "." + foreignKey + "=" + value;
         List<Map<String, Object>> rows =  jdbcTemplate.queryForList(sql);
         NestedRowMapper nestedRowMapper = (NestedRowMapper) rowMapper;
         return (List<T>) nestedRowMapper.getList(rows);

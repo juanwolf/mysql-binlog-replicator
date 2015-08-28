@@ -68,7 +68,8 @@ public class DomainClassAnalyzer {
     @Setter
     private Map<String, DomainClass> nestedDomainClassMap = new HashMap<>();
 
-
+    @Value("${mysql.schema}")
+    String databaseName;
 
     @Autowired
     private ApplicationContext applicationContext;
@@ -119,6 +120,7 @@ public class DomainClassAnalyzer {
                     Class sqlRequesterClass = nestedMapping.sqlAssociaton().getRequesterClass();
                     Constructor sqlRequesterConstructor = sqlRequesterClass.getConstructor();
                     SQLRequester sqlRequester = (SQLRequester) sqlRequesterConstructor.newInstance();
+                    sqlRequester.setDatabaseName(databaseName);
                     sqlRequester.setEntryTableName(mysqlMapping.table());
                     sqlRequester.setExitTableName(nestedMapping.table());
                     sqlRequester.setForeignKey(nestedMapping.foreignKey());
@@ -133,8 +135,8 @@ public class DomainClassAnalyzer {
                     }
                     sqlRequester.setForeignType(foreignType);
                     sqlRequester.setJdbcTemplate(jdbcTemplate);
-                    NestedRowMapper currentClassNestedRowMapper = new NestedRowMapper(classDomain, this);
-                    NestedRowMapper foreignClassNestedRowMapper = new NestedRowMapper(foreignType, this);
+                    NestedRowMapper currentClassNestedRowMapper = new NestedRowMapper(classDomain, this, mysqlMapping.table());
+                    NestedRowMapper foreignClassNestedRowMapper = new NestedRowMapper(foreignType, this, mysqlMapping.table());
                     sqlRequester.setRowMapper(currentClassNestedRowMapper);
                     sqlRequester.setForeignRowMapper(foreignClassNestedRowMapper);
                     nestedClassesMap.put(field.getName(), sqlRequester);

@@ -7,6 +7,7 @@ import fr.juanwolf.mysqlbinlogreplicator.component.DomainClassAnalyzer;
 import fr.juanwolf.mysqlbinlogreplicator.nested.requester.OneToManyRequester;
 import fr.juanwolf.mysqlbinlogreplicator.nested.requester.SQLRequester;
 import fr.juanwolf.mysqlbinlogreplicator.service.MySQLEventListener;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.RowMapper;
 
@@ -34,10 +35,14 @@ public class NestedRowMapper implements RowMapper {
 
     DomainClassAnalyzer domainClassAnalyzer;
 
-    public NestedRowMapper(Class nestedObjectClass, DomainClassAnalyzer domainClassAnalyzer) {
+    @Setter
+    String mainTable;
+
+    public NestedRowMapper(Class nestedObjectClass, DomainClassAnalyzer domainClassAnalyzer, String mainTable) {
         this.nestedObjectClass = nestedObjectClass;
         fields = this.nestedObjectClass.getDeclaredFields();
         this.domainClassAnalyzer = domainClassAnalyzer;
+        this.mainTable = mainTable;
     }
 
     @Override
@@ -89,7 +94,7 @@ public class NestedRowMapper implements RowMapper {
                     if (domainClass != null) {
                         SQLRequester sqlRequester = domainClass.getSqlRequesters().get(field.getName());
                         NestedMapping nestedMapping = field.getAnnotation(NestedMapping.class);
-                        if (nestedMapping != null) {
+                        if (nestedMapping != null && !nestedMapping.table().equals(mainTable)) {
                             if (sqlRequester instanceof OneToManyRequester) {
                                 Object nestedTmpObject = sqlRequester.queryForeignEntity(sqlRequester.getForeignKey(),
                                         sqlRequester.getPrimaryKeyForeignEntity(),
@@ -173,7 +178,7 @@ public class NestedRowMapper implements RowMapper {
                     if (domainClass != null) {
                         SQLRequester sqlRequester = domainClass.getSqlRequesters().get(field.getName());
                         NestedMapping nestedMapping = field.getAnnotation(NestedMapping.class);
-                        if (nestedMapping != null) {
+                        if (nestedMapping != null && !mainTable.equals(nestedMapping.table())) {
                             Object nestedTmpObject = sqlRequester.queryForeignEntity(sqlRequester.getForeignKey(),
                                     sqlRequester.getPrimaryKeyForeignEntity(),
                                     mapFields.get(nestedMapping.foreignKey()).toString());
