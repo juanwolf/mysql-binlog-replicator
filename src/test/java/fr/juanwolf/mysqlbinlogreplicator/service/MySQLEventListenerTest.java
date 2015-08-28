@@ -23,6 +23,8 @@ import com.github.shyiko.mysql.binlog.event.*;
 import com.github.shyiko.mysql.binlog.event.deserialization.ColumnType;
 import fr.juanwolf.mysqlbinlogreplicator.DomainClass;
 import fr.juanwolf.mysqlbinlogreplicator.component.DomainClassAnalyzer;
+import fr.juanwolf.mysqlbinlogreplicator.nested.NestedRowMapper;
+import fr.juanwolf.mysqlbinlogreplicator.nested.requester.OneToManyRequester;
 import fr.juanwolf.mysqlbinlogreplicator.nested.requester.OneToOneRequester;
 import fr.juanwolf.mysqlbinlogreplicator.nested.requester.SQLRequester;
 import integrationTest.domain.User;
@@ -81,9 +83,17 @@ public class MySQLEventListenerTest {
         domainClassAccount.setDomainClass(User.class);
         SQLRequester cartSQLRequester = new OneToOneRequester<>();
         cartSQLRequester.setAssociatedField(User.class.getDeclaredField("cart"));
+        cartSQLRequester.setPrimaryKeyForeignEntity("id");
+        Map<String, Object[]> cartColumnMap = new HashMap<>();
+        Object[] columnarray = {"id", "amount", "user_id"};
+        cartColumnMap.put("cart", columnarray);
+
         Map<String, SQLRequester> sqlRequesterMap = new HashMap<>();
         sqlRequesterMap.put("cart", cartSQLRequester);
         domainClassAccount.setSqlRequesters(sqlRequesterMap);
+        List<String> nestedTables = new ArrayList<>();
+        nestedTables.add("cart");
+        when(domainClassAnalyzer.getNestedTables()).thenReturn(nestedTables);
         domainClassMap.put("user", domainClassAccount);
         domainClassMap.put("newTable", domainClass);
         when(domainClassAnalyzer.getDomainClassMap()).thenReturn(domainClassMap);
@@ -92,6 +102,7 @@ public class MySQLEventListenerTest {
         tableMapEventData.setTable(tableName);
         this.tableMapEvent = new Event(tableMapEventHeader, tableMapEventData);
         mySQLEventListener = new MySQLEventListener(new HashMap<>(), domainClassAnalyzer);
+        mySQLEventListener.setColumnMap(cartColumnMap);
 
     }
 
@@ -397,7 +408,121 @@ public class MySQLEventListenerTest {
         when(domainClassAnalyzer.getDomainClassMap()).thenReturn(domainMap);
         when(domainClassAnalyzer.getMappingTablesExpected()).thenReturn(tablesExpected);
         doReturn(user).when(domainClassAnalyzer).generateInstanceFromName("user");
+    }
 
+    @Test
+    public void getPrimaryKeyValueFromRows_should_return_the_value_of_the_primary_key() {
+        // Given
+        String primaryKeyExpected = "0";
+        String[] rows = {primaryKeyExpected, "", "4"};
+        // When
+        String primaryKey =  mySQLEventListener.getPrimaryKeyValueFromRows(rows,
+                "cart",
+                domainClassAnalyzer.getDomainClassMap().get("user").getSqlRequesters().get("cart"));
+        // Then
+        assertThat(primaryKey).isEqualTo(primaryKeyExpected);
+    }
+
+    @Test
+    public void getPrimaryKeyValueFromRows_should_return_null_if_rows_is_empty() {
+        // Given
+        String[] rows = {};
+        // When
+        String primaryKey =  mySQLEventListener.getPrimaryKeyValueFromRows(rows,
+                "cart",
+                domainClassAnalyzer.getDomainClassMap().get("user").getSqlRequesters().get("cart"));
+        // Then
+        assertThat(primaryKey).isNull();
+    }
+    
+    @Test
+    public void getPrimaryKeyFromEvent_should_return_the_value_of_the_foreign_key_for_an_update_event() throws ReflectiveOperationException {
+        // Given
+        String foreignKeyValueExpected = "115";
+        Map<String, byte[]> columnsType = new HashMap<>();
+        byte[] types = { (byte) ColumnType.VARCHAR.getCode()};
+        columnsType.put("user", types);
+        Map<String, Object[]> columnMap = new HashMap<>();
+        Object[] columns = {"id"};
+        columnMap.put("user", columns);
+        mySQLEventListener.setColumnMap(columnMap);
+        mySQLEventListener.setColumnsTypes(columnsType);
+        doReturn(new User()).when(domainClassAnalyzer).generateInstanceFromName("user");
+        UpdateRowsEventData updateRowsEventData = new UpdateRowsEventData();
+        Map<Serializable[], Serializable[]> map = new HashMap<>();
+        List<Map.Entry<Serializable[], Serializable[]>> datas = new ArrayList();
+        Serializable[] serializables = { foreignKeyValueExpected };
+        map.put(serializables, serializables);
+        datas.add(map.entrySet().stream().findFirst().get());
+        updateRowsEventData.setRows(datas);
+        when(tableMapEventHeader.getEventType()).thenReturn(EventType.UPDATE_ROWS);
+        Event event = new Event(tableMapEventHeader, updateRowsEventData);
+        // When
+        String value = mySQLEventListener.getPrimaryKeyFromEvent(event,
+                domainClassAnalyzer.getDomainClassMap().get("user").getSqlRequesters().get("cart"),
+                "user");
+        // Then
+        assertThat(value).isEqualTo(foreignKeyValueExpected);
+
+    }
+
+    @Test
+    public void getPrimaryKeyFromEvent_should_return_the_value_of_the_foreign_key_for_a_delete_event() throws ReflectiveOperationException {
+        // Given
+        String foreignKeyValueExpected = "115";
+        Map<String, byte[]> columnsType = new HashMap<>();
+        byte[] types = { (byte) ColumnType.VARCHAR.getCode()};
+        columnsType.put("user", types);
+        Map<String, Object[]> columnMap = new HashMap<>();
+        Object[] columns = {"id"};
+        columnMap.put("user", columns);
+        mySQLEventListener.setColumnMap(columnMap);
+        mySQLEventListener.setColumnsTypes(columnsType);
+        doReturn(new User()).when(domainClassAnalyzer).generateInstanceFromName("user");
+        DeleteRowsEventData updateRowsEventData = new DeleteRowsEventData();
+        List<Serializable[]> datas = new ArrayList();
+        Serializable[] serializables = { foreignKeyValueExpected };
+        datas.add(serializables);
+        updateRowsEventData.setRows(datas);
+        when(tableMapEventHeader.getEventType()).thenReturn(EventType.DELETE_ROWS);
+        Event event = new Event(tableMapEventHeader, updateRowsEventData);
+        // When
+        String value = mySQLEventListener.getPrimaryKeyFromEvent(event,
+                domainClassAnalyzer.getDomainClassMap().get("user").getSqlRequesters().get("cart"),
+                "user");
+        // Then
+        assertThat(value).isEqualTo(foreignKeyValueExpected);
+
+    }
+
+
+
+    @Test
+    public void getPrimaryKeyFromEvent_should_return_the_value_of_the_foreign_key_for_an_insert_event() throws ReflectiveOperationException {
+        // Given
+        String foreignKeyValueExpected = "115";
+        Map<String, byte[]> columnsType = new HashMap<>();
+        byte[] types = { (byte) ColumnType.VARCHAR.getCode()};
+        columnsType.put("user", types);
+        Map<String, Object[]> columnMap = new HashMap<>();
+        Object[] columns = {"id"};
+        columnMap.put("user", columns);
+        mySQLEventListener.setColumnMap(columnMap);
+        mySQLEventListener.setColumnsTypes(columnsType);
+        doReturn(new User()).when(domainClassAnalyzer).generateInstanceFromName("user");
+        WriteRowsEventData updateRowsEventData = new WriteRowsEventData();
+        List<Serializable[]> datas = new ArrayList();
+        Serializable[] serializables = { foreignKeyValueExpected };
+        datas.add(serializables);
+        updateRowsEventData.setRows(datas);
+        when(tableMapEventHeader.getEventType()).thenReturn(EventType.WRITE_ROWS);
+        Event event = new Event(tableMapEventHeader, updateRowsEventData);
+        // When
+        String value = mySQLEventListener.getPrimaryKeyFromEvent(event,
+                domainClassAnalyzer.getDomainClassMap().get("user").getSqlRequesters().get("cart"),
+                "user");
+        // Then
+        assertThat(value).isEqualTo(foreignKeyValueExpected);
 
     }
 

@@ -1,6 +1,5 @@
-package fr.juanwolf.mysqlbinlogreplicator.requester;
+package fr.juanwolf.mysqlbinlogreplicator.nested;
 
-import fr.juanwolf.mysqlbinlogreplicator.DomainClass;
 import fr.juanwolf.mysqlbinlogreplicator.component.DomainClassAnalyzer;
 import fr.juanwolf.mysqlbinlogreplicator.domain.User;
 import fr.juanwolf.mysqlbinlogreplicator.nested.NestedRowMapper;
@@ -66,8 +65,8 @@ public class NestedRowMapperTest {
         // Given
         Calendar calendar = Calendar.getInstance();
         java.util.Date currentDate = calendar.getTime();
-
         java.sql.Date date = new java.sql.Date(currentDate.getTime());
+
         when(resultSet.getDate("creationDate")).thenReturn(date);
         // When
         User user = (User) nestedRowMapper.mapRow(resultSet, 0);
